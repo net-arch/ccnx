@@ -32,7 +32,7 @@ static void
 usage(const char *progname)
 {
     fprintf(stderr,
-            "%s [-a] [-c] [-l lifetime] [-s scope] [-u] [-v] [-w timeout] ccnx:/a/b\n"
+            "%s [-a] [-c] [-l lifetime] [-s scope] [-u] [-v] [-w timeout] [-g] ccnx:/a/b\n"
             "   Get one content item matching the name prefix and write it to stdout"
             "\n"
             "   -a - allow stale data\n"
@@ -41,8 +41,11 @@ usage(const char *progname)
             "   -s {0,1,2} - scope of interest.  Default none.\n"
             "   -u - allow unverified content\n"
             "   -v - resolve version number\n"
-            "   -w x - wait time (seconds) for response.  0.001 <= timeout <= 60.000, Default 3.0\n",
-           progname);
+            "   -w x - wait time (seconds) for response.  0.001 <= timeout <= 3600.000, Default 3600.000\n"
+            /* <!--kuwayama */
+            "   -g - guarantee\n",
+            /*  kuwayama--> */
+            progname);
     exit(1);
 }
 
@@ -63,13 +66,16 @@ main(int argc, char **argv)
     const unsigned char *ptr;
     size_t length;
     int resolve_version = 0;
-    int timeout_ms = 3000;
+    int timeout_ms = 3600000;
     const unsigned lifetime_default = CCN_INTEREST_LIFETIME_SEC << 12;
     unsigned lifetime_l12 = lifetime_default;
     double lifetime;
     int get_flags = 0;
+    /* <!--kuwayama */
+    int guarantee = 0;
+    /*  kuwayama--> */
     
-    while ((opt = getopt(argc, argv, "acl:s:uvw:h")) != -1) {
+    while ((opt = getopt(argc, argv, "acgl:s:uvw:h")) != -1) {
         switch (opt) {
             case 'a':
                 allow_stale = 1;
@@ -107,11 +113,16 @@ main(int argc, char **argv)
                 break;
             case 'w':
                 timeout_ms = strtod(optarg, NULL) * 1000;
-                if (timeout_ms <= 0 || timeout_ms > 60000) {
-                    fprintf(stderr, "%s: invalid timeout.  0.001 <= timeout <= 60.000\n", optarg);
+                if (timeout_ms <= 0 || timeout_ms > 3600000) {
+                    fprintf(stderr, "%s: invalid timeout.  0.001 <= timeout <= 3600.000\n", optarg);
                     exit(1);
                 }
                 break;
+            /* <!--kuwayama */
+            case 'g':
+              guarantee = 1;
+              break;
+            /*  kuwayama--> */
             case 'h':
             default:
                 usage(argv[0]);
@@ -138,7 +149,7 @@ main(int argc, char **argv)
         fprintf(stderr, "%s: bad ccn URI: %s\n", argv[0], arg);
         exit(1);
     }
-	if (allow_stale || lifetime_l12 != lifetime_default || scope != -1) {
+	if (allow_stale || lifetime_l12 != lifetime_default || scope != -1 || guarantee == 1) {
         templ = ccn_charbuf_create();
         ccnb_element_begin(templ, CCN_DTAG_Interest);
         ccnb_element_begin(templ, CCN_DTAG_Name);
@@ -163,6 +174,11 @@ main(int argc, char **argv)
 				buf[i] = lifetime_l12 & 0xff;
 			ccnb_append_tagged_blob(templ, CCN_DTAG_InterestLifetime, buf, sizeof(buf));
 		}
+    /* <!--kuwayama */
+    if (guarantee) {
+      ccnb_tagged_putf(templ, CCN_DTAG_ControlPacketID, "%d", RESERVE); /* RESERVE */
+    }
+    /*  kuwayama--> */
         ccnb_element_end(templ); /* </Interest> */
     }
     resultbuf = ccn_charbuf_create();

@@ -225,6 +225,12 @@ hashtb_seek(struct hashtb_enumerator *hte, const void *key, size_t keysize, size
         setpos(hte, NULL);
         return(-1);
     }
+    /*add by Fumiya
+    if (keysize == NULL){
+	setpos(hte, NULL);
+	return(-1);
+    }
+    add by Fumiya*/
     if (ht->refcount == 1 && ht->n > ht->n_buckets * 3) {
         ht->refcount--;
         hashtb_rehash(ht, 2 * ht->n + 1);

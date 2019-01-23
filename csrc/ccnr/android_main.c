@@ -20,7 +20,7 @@
 
 #include <stdarg.h>
 #include <android/log.h>
-#include <ccnr_private.h>
+#include "ccnr_private.h"
 
 static int
 logger(void *loggerdata, const char *format, va_list ap)

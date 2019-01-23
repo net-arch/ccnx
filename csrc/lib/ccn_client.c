@@ -402,8 +402,10 @@ ccn_connect(struct ccn *h, const char *name)
     }
 #endif
     h->sock = socket(sockaddr.ss_family, SOCK_STREAM, 0);
-    if (h->sock == -1)
+    if (h->sock == -1){
+	printf("create socket failed...\n");
         return(NOTE_ERRNO(h));
+    }
     switch (sockaddr.ss_family) {
         case AF_UNIX: addr_size = sizeof(*un_addr); break;
         case AF_INET: addr_size = sizeof(*in_addr); break;
@@ -411,11 +413,15 @@ ccn_connect(struct ccn *h, const char *name)
         default: addr_size = 0;
     }
     res = connect(h->sock, addr, addr_size);
-    if (res == -1)
+    if (res == -1){
+	printf("connect socket failed...\n");
         return(NOTE_ERRNO(h));
+    }
     res = fcntl(h->sock, F_SETFL, O_NONBLOCK);
-    if (res == -1)
+    if (res == -1){
+	printf("set nonblock failed...\n");
         return(NOTE_ERRNO(h));
+    }
     return(h->sock);
 }
 
@@ -1139,8 +1145,8 @@ ccn_put(struct ccn *h, const void *p, size_t length)
     }
     if (h->sock == -1)
         res = 0;
-    else
-        res = write(h->sock, p, length);
+    else{
+        res = write(h->sock, p, length);}
     if (res == length)
         return(0);
     if (res == -1) {
@@ -1792,8 +1798,8 @@ ccn_dispatch_message(struct ccn *h, unsigned char *msg, size_t size)
                                                                  &info);
                                     if (interest->magic != 0x7059e5f4)
                                         ccn_gripe(interest);
-                                    if (ures == CCN_UPCALL_RESULT_REEXPRESS)
-                                        ccn_refresh_interest(h, interest);
+                                    if (ures == CCN_UPCALL_RESULT_REEXPRESS){
+                                        ccn_refresh_interest(h, interest);}
                                     else if ((ures == CCN_UPCALL_RESULT_VERIFY ||
                                               ures == CCN_UPCALL_RESULT_FETCHKEY) &&
                                              (upcall_kind == CCN_UPCALL_CONTENT_UNVERIFIED ||
@@ -1950,8 +1956,8 @@ ccn_age_interest(struct ccn *h,
             }
             ccn_indexbuf_release(h, info.interest_comps);
         }
-        if (ures == CCN_UPCALL_RESULT_REEXPRESS)
-            ccn_refresh_interest(h, interest);
+        if (ures == CCN_UPCALL_RESULT_REEXPRESS){
+            ccn_refresh_interest(h, interest);}
         else
             interest->target = 0;
     }
@@ -2121,7 +2127,7 @@ ccn_run(struct ccn *h, int timeout)
             break;
         }
         if (h->schedule != NULL) {
-            s_microsec = ccn_schedule_run(h->schedule);
+          s_microsec = ccn_schedule_run(h->schedule);
         }
         microsec = ccn_process_scheduled_operations(h);
         if (s_microsec >= 0 && s_microsec < microsec)
@@ -2905,24 +2911,20 @@ ccn_chk_signing_params(struct ccn *h,
     return(res);
 }
 
-/**
- * Create a signed ContentObject.
- *
- * @param h is the ccn handle
- * @param resultbuf - result buffer to which the ContentObject will be appended
- * @param name_prefix contains the ccnb-encoded name
- * @param params describe the ancillary information needed
- * @param data points to the raw content
- * @param size is the size of the raw content, in bytes
- * @returns 0 for success, -1 for error
+/* <!--kuwayama
+ * ccn_sign_{content, notice, release}()
+ * から共通部分を括り出したサブルーチン
+ * ccn_sign_content()からのコピペ
  */
 int
-ccn_sign_content(struct ccn *h,
-                 struct ccn_charbuf *resultbuf,
-                 const struct ccn_charbuf *name_prefix,
-                 const struct ccn_signing_params *params,
-                 const void *data, size_t size)
+ccn_sign_template(struct ccn *h,
+                  struct ccn_charbuf *resultbuf,
+                  const struct ccn_charbuf *name_prefix,
+                  const struct ccn_signing_params *params,
+                  const void *data, size_t size,
+                  enum controlpacketid control)
 {
+
     struct hashtb_enumerator ee;
     struct hashtb_enumerator *e = &ee;
     struct ccn_signing_params p = CCN_SIGNING_PARAMS_INIT;
@@ -3008,7 +3010,8 @@ ccn_sign_content(struct ccn *h,
                                            data,
                                            size,
                                            ccn_keystore_digest_algorithm(keystore),
-                                           ccn_keystore_key(keystore));
+                                           ccn_keystore_key(keystore),
+                                           control);
     }
     else {
         res = NOTE_ERR(h, -1);
@@ -3021,6 +3024,68 @@ ccn_sign_content(struct ccn *h,
     ccn_charbuf_destroy(&signed_info);
     return(res);
 }
+/*  kuwayama--> */
+
+/**
+ * Create a signed ContentObject.
+ *
+ * @param h is the ccn handle
+ * @param resultbuf - result buffer to which the ContentObject will be appended
+ * @param name_prefix contains the ccnb-encoded name
+ * @param params describe the ancillary information needed
+ * @param data points to the raw content
+ * @param size is the size of the raw content, in bytes
+ * @returns 0 for success, -1 for error
+ */
+int
+ccn_sign_content(struct ccn *h,
+                 struct ccn_charbuf *resultbuf,
+                 const struct ccn_charbuf *name_prefix,
+                 const struct ccn_signing_params *params,
+                 const void *data, size_t size)
+{
+  /* <!--kuwayama */
+  return ccn_sign_template(h,
+                           resultbuf,
+                           name_prefix,
+                           params,
+                           data,
+                           size,
+                           DEFAULT);
+}
+
+int
+ccn_sign_notice(struct ccn *h,
+                struct ccn_charbuf *resultbuf,
+                const struct ccn_charbuf *name_prefix,
+                const struct ccn_signing_params *params,
+                const void *data, size_t size)
+{
+  return ccn_sign_template(h,
+                           resultbuf,
+                           name_prefix,
+                           params,
+                           data,
+                           size,
+                           NOTICE);
+}
+
+int
+ccn_sign_release(struct ccn *h,
+                 struct ccn_charbuf *resultbuf,
+                 const struct ccn_charbuf *name_prefix,
+                 const struct ccn_signing_params *params,
+                 const void *data, size_t size)
+{
+  return ccn_sign_template(h,
+                           resultbuf,
+                           name_prefix,
+                           params,
+                           data,
+                           size,
+                           RELEASE);
+}
+/*  kuwayama--> */
 /**
  * Check whether content described by info is final block.
  *

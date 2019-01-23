@@ -23,7 +23,7 @@
 #include <ccn/charbuf.h>
 #include <ccn/coding.h>
 #include <ccn/indexbuf.h>
-
+#include <stdio.h> //add by xu
 struct ccn_buf_decoder *
 ccn_buf_decoder_start(struct ccn_buf_decoder *d,
                       const unsigned char *buf, size_t size)
@@ -311,6 +311,35 @@ ccn_parse_Name(struct ccn_buf_decoder *d, struct ccn_indexbuf *components)
     else
         return(ncomp);
 }
+
+/* <!--kuwayama
+ * CCN_DTAG_ControlPacketIDが付加されていない場合 DEFAULT   = 0
+ * 資源予約パケットの場合                         RESERVE   = 1
+ * 帯域幅付きInterest/ContentObject               GUARANTEE = 2
+ * 確保通知パケットの場合                         NOTICE    = 3
+ * 資源解放パケットの場合                         RELEASE   = 4
+
+int 
+ccn_parse_ControlPacketID(struct ccn_buf_decoder *d, struct ccn_parsed_interest *pi)
+{
+  int res = 0;
+  unsigned pubstart = d->decoder.token_index;
+  unsigned pubend = pubstart;
+  if (ccn_buf_match_dtag(d, CCN_DTAG_ControlPacketID)) {
+    ccn_buf_advance(d);
+    res = ccn_parse_nonNegativeInteger(d);
+    ccn_buf_check_close(d);
+    pubend = d->decoder.token_index;
+    if (d->decoder.state < 0)
+      return (d->decoder.state);
+    if (pi != NULL) {
+      pi->offset[CCN_PI_B_ControlPacketID] = pubstart;
+      pi->offset[CCN_PI_E_ControlPacketID] = pubend;
+    }
+  }
+  return(res);
+}
+/*  kuwayama--> */
 
 int
 ccn_parse_PublisherID(struct ccn_buf_decoder *d, struct ccn_parsed_interest *pi)
@@ -608,7 +637,7 @@ ccn_parse_interest(const unsigned char *msg, size_t size,
         if (res >= 0)
             interest->max_suffix_comps = res < 32767 ? res : 32767;
         if (interest->max_suffix_comps < interest->min_suffix_comps)
-            return (d->decoder.state = -__LINE__);
+            return (d->decoder.state = -__LINE__);        
         /* optional PublisherID */
         res = ccn_parse_PublisherID(d, interest);
         /* optional Exclude element */
@@ -619,6 +648,7 @@ ccn_parse_interest(const unsigned char *msg, size_t size,
         interest->offset[CCN_PI_B_ChildSelector] = d->decoder.token_index;
         res = ccn_parse_optional_tagged_nonNegativeInteger(d,
                          CCN_DTAG_ChildSelector);
+        
         if (res < 0)
             res = 0;
         interest->orderpref = res;
@@ -648,6 +678,12 @@ ccn_parse_interest(const unsigned char *msg, size_t size,
         if (res >= 0)
             magic |= 20100401;
         interest->offset[CCN_PI_E_InterestLifetime] = d->decoder.token_index;
+        /* <!--kuwayama */
+        interest->offset[CCN_PI_B_ControlPacketID] = d->decoder.token_index;
+        interest->control = ccn_parse_optional_tagged_nonNegativeInteger(d,
+                                                                         CCN_DTAG_ControlPacketID);
+        interest->offset[CCN_PI_E_ControlPacketID] = d->decoder.token_index;
+        /*  kuwayama--> */
         /* optional Nonce */
         interest->offset[CCN_PI_B_Nonce] = d->decoder.token_index;
         res = ccn_parse_optional_tagged_BLOB(d, CCN_DTAG_Nonce, 4, 64);
@@ -829,9 +865,20 @@ ccn_parse_ContentObject(const unsigned char *msg, size_t size,
         x->offset[CCN_PCO_E_ComponentLast] = d->decoder.token_index - 1;
         x->offset[CCN_PCO_E_Name] = d->decoder.token_index;
         ccn_parse_SignedInfo(d, x);
+        /* <!--kuwayama 
+        x->control = ccn_parse_optional_tagged_nonNegativeInteger(d,
+                         CCN_DTAG_ControlPacketID);
+          kuwayama--> */
         x->offset[CCN_PCO_B_Content] = d->decoder.token_index;
         ccn_parse_required_tagged_BLOB(d, CCN_DTAG_Content, 0, -1);
         x->offset[CCN_PCO_E_Content] = d->decoder.token_index;
+        /* <!--kuwayama move from above here by xu*/
+        x->offset[CCN_PCO_B_ControlPacketID] = d->decoder.token_index;//add by xu
+        x->control = ccn_parse_optional_tagged_nonNegativeInteger(d,
+                         CCN_DTAG_ControlPacketID);
+        x->offset[CCN_PCO_E_ControlPacketID] = d->decoder.token_index;//add by xu
+        /*  kuwayama--> */
+
         ccn_buf_check_close(d);
         x->offset[CCN_PCO_E] = d->decoder.index;
     }
