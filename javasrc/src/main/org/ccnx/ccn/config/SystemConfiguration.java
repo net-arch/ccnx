@@ -171,7 +171,7 @@ public class SystemConfiguration {
 	 */
 	protected static final String PIPELINE_SIZE_PROPERTY = "org.ccnx.PipelineSize";
 	protected static final String PIPELINE_SIZE_ENV_VAR = "JAVA_PIPELINE_SIZE";
-	public static int PIPELINE_SIZE = 4;
+	public static int PIPELINE_SIZE = 20;//modified by xu; original value = 4
 
 	/**
 	 * Pipeline segment attempts for pipeline in CCNAbstractInputStream
@@ -395,7 +395,7 @@ public class SystemConfiguration {
 
 		// Allow override of default pipeline size for CCNAbstractInputStream
 		try {
-			PIPELINE_SIZE = Integer.parseInt(retrievePropertyOrEnvironmentVariable(PIPELINE_SIZE_PROPERTY, PIPELINE_SIZE_ENV_VAR, "4"));
+			PIPELINE_SIZE = Integer.parseInt(retrievePropertyOrEnvironmentVariable(PIPELINE_SIZE_PROPERTY, PIPELINE_SIZE_ENV_VAR, "20"));//modified by xu original value = 4
 			//PIPELINE_SIZE = Integer.parseInt(System.getProperty(PIPELINE_SIZE_PROPERTY, "4"));
 		} catch (NumberFormatException e) {
 			System.err.println("The PipelineSize must be an integer.");
@@ -404,7 +404,7 @@ public class SystemConfiguration {
 
 		// Allow override of default pipeline size for CCNAbstractInputStream
 		try {
-			PIPELINE_SEGMENTATTEMPTS = Integer.parseInt(retrievePropertyOrEnvironmentVariable(PIPELINE_ATTEMPTS_PROPERTY, PIPELINE_ATTEMPTS_ENV_VAR, "5"));
+			PIPELINE_SEGMENTATTEMPTS = Integer.parseInt(retrievePropertyOrEnvironmentVariable(PIPELINE_ATTEMPTS_PROPERTY, PIPELINE_ATTEMPTS_ENV_VAR, "25"));//modified by xu original value = 5
 			//PIPELINE_SIZE = Integer.parseInt(System.getProperty(PIPELINE_SIZE_PROPERTY, "4"));
 		} catch (NumberFormatException e) {
 			System.err.println("The PipelineAttempts must be an integer.");
@@ -413,7 +413,7 @@ public class SystemConfiguration {
 
 		// Allow override of default pipeline rtt multiplication factor for CCNAbstractInputStream
 		try {
-			PIPELINE_RTTFACTOR = Integer.parseInt(retrievePropertyOrEnvironmentVariable(PIPELINE_RTT_PROPERTY, PIPELINE_RTT_ENV_VAR, "2"));
+			PIPELINE_RTTFACTOR = Integer.parseInt(retrievePropertyOrEnvironmentVariable(PIPELINE_RTT_PROPERTY, PIPELINE_RTT_ENV_VAR, "10"));//modified by xu original value = 2
 		} catch (NumberFormatException e) {
 			System.err.println("The PipelineRTTFactor must be an integer.");
 
