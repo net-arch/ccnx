@@ -142,7 +142,7 @@ public class CCNProtocolDTags {
 	public static final int ConfigSlice = 124;
 	public static final int ConfigSliceList = 125;
 	public static final int ConfigSliceOp = 126;
-
+        public static final int ControlPacketID = 147;//add by xu
 	// Remember to keep in sync with schema/tagnames.csvsdict
 	public static final int CCNProtocolDataUnit = 17702112;
 	public static final String CCNPROTOCOL_DATA_UNIT = "CCNProtocolDataUnit";
@@ -169,7 +169,7 @@ public class CCNProtocolDTags {
 		"InfoString", null,
         "StatusResponse", "StatusCode", "StatusText", "SyncNode", "SyncNodeKind", "SyncNodeElement",
         "SyncVersion", "SyncNodeElements", "SyncContentHash", "SyncLeafCount", "SyncTreeDepth", "SyncByteCount",
-        "ConfigSlice", "ConfigSliceList", "ConfigSliceOp" };
+        "ConfigSlice", "ConfigSliceList", "ConfigSliceOp", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "ControlPacketID" };//add by xu from "ConfigSliceOp"
 	protected static final int TAG_MAP_LENGTH = _tagToStringMap.length;
 
 	
