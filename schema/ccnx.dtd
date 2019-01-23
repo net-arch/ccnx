@@ -11,7 +11,7 @@
 <!ELEMENT CCNProtocolDataUnit	((ContentObject | Interest)*)>
 <!ATTLIST CCNProtocolDataUnit	%commonattrs;>
 
-<!ELEMENT ContentObject	(Signature, Name, SignedInfo, Content)>
+<!ELEMENT ContentObject	(Signature, Name, SignedInfo, Content, ControlPacketID)>
 <!ATTLIST ContentObject	%commonattrs;>
 
 <!ELEMENT Collection	(Link*)>
@@ -63,6 +63,8 @@
 <!ELEMENT Content	(#PCDATA)>	<!-- base64Binary -->
 <!ATTLIST Content       ccnbencoding CDATA #FIXED 'base64Binary'>
 
+<!ELEMENT ControlPacketID  (#PCDATA)>   <!-- noNegativeInteger -->
+
 <!ELEMENT Name		(Component*)>
 <!ATTLIST Name		%commonattrs;>
 
@@ -88,7 +90,8 @@
                          ChildSelector?,
                          AnswerOriginKind?,
                          Scope?,
-						 InterestLifetime?,
+			 InterestLifetime?,
+                         ControlPacketID?,
                          Nonce?)>
 <!ATTLIST Interest	%commonattrs;>
 
@@ -120,6 +123,8 @@
 <!ELEMENT AnswerOriginKind (#PCDATA)>   <!-- nonNegativeInteger -->
 
 <!ELEMENT Scope         (#PCDATA)>      <!-- nonNegativeInteger -->
+
+<!ELEMENT ControlPacketID  (#PCDATA)>   <!-- noNegativeInteger -->
 
 <!ELEMENT Nonce         (#PCDATA)>      <!-- base64Binary -->
 <!ATTLIST Nonce         ccnbencoding CDATA #FIXED 'base64Binary'>
