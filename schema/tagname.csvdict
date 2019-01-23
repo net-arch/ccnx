@@ -107,5 +107,6 @@
 144,StrategySelection
 145,StrategyID
 146,StrategyParameters
+147,ControlPacketID
 256,SequenceNumber
 17702112,CCNProtocolDataUnit
