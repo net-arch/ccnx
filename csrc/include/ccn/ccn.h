@@ -72,6 +72,9 @@ struct ccn_pkey;
 /* forward declarations */
 struct ccn_closure;
 struct ccn_upcall_info;
+/* <!--kuwayama */
+enum controlpacketid;
+/*  kuwayama--> */
 struct ccn_parsed_interest;
 struct ccn_parsed_ContentObject;
 struct ccn_parsed_Link;
@@ -518,12 +521,21 @@ enum ccn_parsed_interest_offsetid {
     CCN_PI_E_Scope,
     CCN_PI_B_InterestLifetime,
     CCN_PI_E_InterestLifetime,
+    /* <!--kuwayama */
+    CCN_PI_B_ControlPacketID,
+    CCN_PI_E_ControlPacketID,
+    /*  kuwayama--> */
     CCN_PI_B_Nonce,
     CCN_PI_E_Nonce,
     CCN_PI_B_OTHER,
     CCN_PI_E_OTHER,
     CCN_PI_E
 };
+
+
+/* <!--kuwayama */
+//Migrate to code.h, for ccnd.c//commented by xu //enum controlpacketid {DEFAULT = 0, RESERVE = 1, GUARANTEE = 2, NOTICE = 3, RELEASE = 4};
+/*  kuwayama--> */
 
 struct ccn_parsed_interest {
     int magic;
@@ -533,7 +545,11 @@ struct ccn_parsed_interest {
     int orderpref;
     int answerfrom;
     int scope;
+    int control;//add by xu
     unsigned short offset[CCN_PI_E+1];
+  /* <!--kuwayama */
+  //enum controlpacketid control;
+  /*  kuwayama--> */
 };
 
 enum ccn_parsed_Link_offsetid {
@@ -688,6 +704,10 @@ enum ccn_parsed_content_object_offsetid {
     CCN_PCO_B_ExtOpt,
     CCN_PCO_E_ExtOpt,
     CCN_PCO_E_SignedInfo,
+    /* <!--kuwayama */
+    CCN_PCO_B_ControlPacketID,
+    CCN_PCO_E_ControlPacketID,
+    /*  kuwayama--> */
     CCN_PCO_B_Content,
     CCN_PCO_E_Content,
     CCN_PCO_E
@@ -700,6 +720,9 @@ struct ccn_parsed_ContentObject {
     unsigned short offset[CCN_PCO_E+1];
     unsigned char digest[32];	/* Computed only when needed */
     int digest_bytes;
+  /* <!--kuwayama */    
+  enum controlpacketid control;
+  /*  kuwayama--> */
 };
 
 /*
@@ -843,6 +866,18 @@ int ccn_sign_content(struct ccn *h,
                      const struct ccn_signing_params *params,
                      const void *data, size_t size);
 
+int ccn_sign_notice(struct ccn *h,
+                    struct ccn_charbuf *resultbuf,
+                    const struct ccn_charbuf *name_prefix,
+                    const struct ccn_signing_params *params,
+                    const void *data, size_t size);
+
+int ccn_sign_release(struct ccn *h,
+                     struct ccn_charbuf *resultbuf,
+                     const struct ccn_charbuf *name_prefix,
+                     const struct ccn_signing_params *params,
+                     const void *data, size_t size);
+
 int ccn_load_signing_key(struct ccn *h,
                          const char *keystore_path,
                          const char *keystore_passphrase,
@@ -895,7 +930,10 @@ int ccn_encode_ContentObject(struct ccn_charbuf *buf,
                              const void *data,
                              size_t size,
                              const char *digest_algorithm,
-                             const struct ccn_pkey *private_key);
+                             const struct ccn_pkey *private_key,
+                             /* <!--kuwayama */
+                             enum controlpacketid control
+                             /*  kuwayama--> */);
 
 /***********************************
  * Matching
@@ -969,6 +1007,7 @@ int ccn_charbuf_append_tt(struct ccn_charbuf *c, size_t val, enum ccn_tt tt);
  */
 int ccn_charbuf_append_closer(struct ccn_charbuf *c);
 
+int ccn_charbuf_remove_closer(struct ccn_charbuf *c);//add by xu
 /***********************************
  * Slightly higher level binary formatting
  */

@@ -47,6 +47,11 @@ enum ccn_tt {
 /** CCN_CLOSE terminates composites */
 #define CCN_CLOSE ((unsigned char)(0))
 
+/* <-- add by xu */
+/*Migrate from ccn.h, for ccnd*/
+enum controlpacketid {DEFAULT = 0, RESERVE = 1, GUARANTEE = 2, NOTICE = 3, RELEASE = 4};
+/*  add by xu end -->*/
+
 enum ccn_ext_subtype {
     /* skip smallest values for now */
     CCN_PROCESSING_INSTRUCTIONS = 16 /* <?name:U value:U?> */
@@ -167,6 +172,9 @@ enum ccn_dtag {
     CCN_DTAG_StrategySelection = 144,
     CCN_DTAG_StrategyID = 145,
     CCN_DTAG_StrategyParameters = 146,
+    /* <!--kuwayama */
+    CCN_DTAG_ControlPacketID = 147,
+    /*  kuwayama--> */
     CCN_DTAG_SequenceNumber = 256,
     CCN_DTAG_CCNProtocolDataUnit = 17702112
 };

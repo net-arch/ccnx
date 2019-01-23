@@ -169,7 +169,7 @@ r_dispatch_process_input(struct ccnr_handle *h, int fd)
     struct sockaddr_storage sstor;
     socklen_t addrlen = sizeof(sstor);
     struct sockaddr *addr = (struct sockaddr *)&sstor;
-    
+   
     fdholder = r_io_fdholder_from_fd(h, fd);
     if (fdholder == NULL)
         return;

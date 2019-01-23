@@ -271,8 +271,11 @@ ccnd_debug_content(struct ccnd_handle *h,
 {
     struct ccny *y = NULL;
     struct ccn_charbuf *c;
-    
-    y = ccny_from_cookie(h->content_tree, content->accession);
+      
+    y = ccny_from_cookie(h->content_tree_g, content->accession);
+    if (y == NULL){
+        y = ccny_from_cookie(h->content_tree, content->accession);
+    }
     if (y == NULL) return;
     c = ccn_charbuf_create();
     if (c == NULL) return;

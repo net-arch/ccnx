@@ -61,9 +61,14 @@
 #include "ccnr_msg.h"
 #include "ccnr_store.h"
 
+
 static int
 choose_face_delay(struct ccnr_handle *h, struct fdholder *fdholder, enum cq_delay_class c)
 {
+    /* <!--kuwayama 
+    if (c == CCN_CQ_GUARANTEE)
+      return(CCN_CQ_GUARANTEE);
+    /*  kuwayama--> */
     if (fdholder->flags & CCNR_FACE_CCND)
         return(1);
     if (fdholder->flags & CCNR_FACE_REPODATA)
@@ -112,6 +117,11 @@ r_sendq_content_queue_destroy(struct ccnr_handle *h, struct content_queue **pq)
 static enum cq_delay_class
 choose_content_delay_class(struct ccnr_handle *h, unsigned filedesc, int content_flags)
 {
+  /* <!--kuwayama 
+  if (content_flags == CCN_CQ_GUARANTEE)
+    return(CCN_CQ_GUARANTEE);
+  else
+  /*  kuwayama--> */
     return(CCN_CQ_NORMAL); /* default */
 }
 
