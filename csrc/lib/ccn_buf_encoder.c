@@ -153,8 +153,10 @@ ccn_encode_ContentObject(struct ccn_charbuf *buf,
                          const void *data,
                          size_t size,
                          const char *digest_algorithm,
-                         const struct ccn_pkey *key
-                         )
+                         const struct ccn_pkey *key,
+                         /* <!--kuwayama */
+                         enum controlpacketid control
+                         /*  kuwayama--> */)
 {
     int res = 0;
     struct ccn_sigc *sig_ctx = NULL;
@@ -218,6 +220,17 @@ ccn_encode_ContentObject(struct ccn_charbuf *buf,
                                 NULL, 0, signature, signature_size);
     res |= ccn_charbuf_append_charbuf(buf, Name);
     res |= ccn_charbuf_append_charbuf(buf, SignedInfo);
+    /* <!--kuwayama */
+    if (control == NOTICE) {
+      res |= ccnb_tagged_putf(buf, CCN_DTAG_ControlPacketID, "%d", NOTICE);
+    } else if (control == RELEASE) {
+      res |= ccnb_tagged_putf(buf, CCN_DTAG_ControlPacketID, "%d", RELEASE);
+    } else if (control == GUARANTEE) {
+      res |= ccnb_tagged_putf(buf, CCN_DTAG_ControlPacketID, "%d", GUARANTEE);
+    } /* else {
+      res |= ccnb_tagged_putf(buf, CCN_DTAG_ControlPacketID, "%d", DEFAULT);
+    }
+    kuwayama--> */
     res |= ccnb_append_tagged_blob(buf, CCN_DTAG_Content, data, size);
     res |= ccnb_element_end(buf);
 Bail:

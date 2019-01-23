@@ -12,7 +12,8 @@
 # FOR A PARTICULAR PURPOSE.
 #
 
-LDLIBS = -L$(CCNLIBDIR) $(MORE_LDLIBS) -lccn
+# Add "-lpthread" for multi-thread compile to the following line // add by xu
+LDLIBS = -L$(CCNLIBDIR) $(MORE_LDLIBS) -lccn -lpthread
 CCNLIBDIR = ../lib
 
 INSTALLED_PROGRAMS = ccnd ccndsmoketest 

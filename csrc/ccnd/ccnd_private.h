@@ -69,6 +69,57 @@ struct ncelinks {
     struct ncelinks *prev;           /**< previous in list */
 };
 
+/*<!-- add by xu */
+#ifndef __cplusplus
+typedef char bool;
+#define false 0
+#define true 1
+#endif
+
+typedef struct object_in_queue {
+    struct face *face;
+    struct ccn_charbuf *c;
+    const void *data;
+    size_t size;
+}object_in_queue;
+typedef object_in_queue queue_elem_t; // type of element in queue
+typedef struct queue_t {
+    long int front;                /* Header of queue */
+    long int rear;                 /* Tail of queue */
+    long int capacity;             /* Capacity of queue, unit of element */
+    queue_elem_t *elems;           /* memory block for data */
+}queue_t;
+void queue_init(queue_t *q, const int capacity);
+void queue_uninit(queue_t *q);
+bool queue_empty(const queue_t *q);
+long int queue_size(const queue_t *q);
+void queue_push(queue_t *q, const queue_elem_t x);
+void queue_pop(queue_t *q);
+queue_elem_t queue_front(const queue_t *q);
+queue_elem_t queue_back(const queue_t *q);
+/* add by xu end --> */
+
+/* <!--kuwayama */
+struct reserve_list {
+    struct ccn_charbuf *flatname;
+    unsigned faceid;
+    // unsigned bandwidth;
+    struct reserve_list *next;
+    struct reserve_list *prev;
+};
+
+struct reserve_list *rlist_create(void);
+void rlist_destroy(struct ccnd_handle *, struct reserve_list *);
+void rlist_append(struct ccnd_handle *, struct reserve_list *);
+void rlist_clear(struct ccnd_handle *);
+/*  kuwayama--> */
+
+/*<!-- add by xu */
+#define QUEUE_0_RUNNING   (1 << 0) /**< Queue 0 is running */
+#define QUEUE_1_RUNNING   (1 << 1) 
+#define QUEUE_2_RUNNING   (1 << 2) 
+#define QUEUE_3_RUNNING   (1 << 3) 
+/*  add by xu end -->*/
 /**
  * We pass this handle almost everywhere within ccnd
  */
@@ -108,6 +159,29 @@ struct ccnd_handle {
     unsigned starttime_usec;        /**< ccnd start time fractional part */
     unsigned iserial;               /**< interest serial number (for logs) */
     struct ccn_schedule *sched;     /**< our schedule */
+    /* <!--kuwayama */
+    //commented by xu //struct ccn_schedule *drr;       /**< priority schedule */
+    //commented by xu //struct reserve_list *rlist_head;
+    // unsinged bwpool;
+    struct queue_t *qos_queue_0; //add by xu
+    struct queue_t *qos_queue_1; //add by xu
+    struct queue_t *qos_queue_2; //add by xu
+    struct queue_t *norm_queue;  //add by xu
+	int number_of_running_queue; /**< current number of guarantee queue */
+	int max_number_of_running_queue; /**< max number of guarantee queue, use together with
+                                     	number_of_running_queue and should consider the physical link bandwidth*/
+	int bandwidth_of_queue;      /**< bandwidth of a guarantee queue need, here consider 
+	                                   all bandwidth of queue need are same */
+	unsigned queue_flag;
+    /*  kuwayama--> */
+    /* <!-- add by xu */
+    enum controlpacketid interest_control_flag;  /** for propogate interest*/ 
+    unsigned is_reserved;            /** for forwarding content object*/
+                                     /** 0: channel is not reserved, 
+                                       *    contents are forwared in a normal queue 
+                                       * 1: channel is reserved, 
+                                       *    contents are frowarded in a high prior queue*/
+    /* -- xu -->*/
     struct ccn_charbuf *errbuf;     /**< for strategy error reporting */
     struct ccn_charbuf *send_interest_scratch; /**< for use by send_interest */
     struct ccn_charbuf *scratch_charbuf; /**< one-slot scratch cache */
@@ -182,6 +256,9 @@ enum cq_delay_class {
     CCN_CQ_ASAP,
     CCN_CQ_NORMAL,
     CCN_CQ_SLOW,
+    /* <!--kuwayama */
+    CCN_CQ_GUARANTEE,
+    /*  kuwayama--> */
     CCN_CQ_N
 };
 
@@ -289,6 +366,7 @@ struct content_entry {
     int staletime;              /**< Time in seconds, relative to starttime */
     struct content_entry *nextx; /**< Next to expire after us */
     struct content_entry *prevx; /**< Expiry doubly linked for fast removal */
+    enum controlpacketid control; /**< Content control packet id add by xu*/
 };
 
 /**

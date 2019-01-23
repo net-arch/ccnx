@@ -112,6 +112,10 @@ hashtb_n(struct hashtb *ht)
     return(ht->n);
 }
 
+/*
+* 1.get hash from key and keysize
+* 2.Search to the same place of hash and confirm that keysize and key are equal
+*/
 void *
 hashtb_lookup(struct hashtb *ht, const void *key, size_t keysize)
 {

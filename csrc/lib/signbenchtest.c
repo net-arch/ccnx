@@ -138,7 +138,11 @@ main(int argc, char **argv)
 				   path, signed_info, 
 				   msgbuf, PAYLOAD_SIZE,
 				   ccn_keystore_digest_algorithm(keystore), 
-				   ccn_keystore_key(keystore));
+           ccn_keystore_key(keystore),
+                                   /* <!--kuwayama */
+                                   DEFAULT
+                                   /*  kuwayama--> */
+                                   );
 
     if (res != 0) {
       printf("ContentObject encode failed on iteration %d\n", i);

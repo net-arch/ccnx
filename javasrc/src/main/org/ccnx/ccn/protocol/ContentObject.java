@@ -64,7 +64,7 @@ public class ContentObject extends GenericXMLEncodable implements XMLEncodable, 
 	protected ContentName _name;
 	protected SignedInfo _signedInfo;
 	protected byte [] _content;
-	
+        protected Integer _controlpacketid;     //add by xu 
 	/**
 	 * Cache of the complete ContentObject's digest. Set when first calculated.
 	 * Used as the implicit last name component.
@@ -361,6 +361,8 @@ public class ContentObject extends GenericXMLEncodable implements XMLEncodable, 
 	 * @see org.ccnx.ccn.impl.encoding.XMLEncodable
 	 */
 	public void decode(XMLDecoder decoder) throws ContentDecodingException {
+
+                
 		decoder.readStartElement(getElementLabel());
 
 		_signature = new Signature();
@@ -373,6 +375,10 @@ public class ContentObject extends GenericXMLEncodable implements XMLEncodable, 
 		_signedInfo.decode(decoder);
 
 		_content = decoder.readBinaryElement(CCNProtocolDTags.Content);
+                
+                if(decoder.peekStartElement(CCNProtocolDTags.ControlPacketID)){
+                    _controlpacketid = decoder.readIntegerElement(CCNProtocolDTags.ControlPacketID);//add by xu
+                }
 
 		decoder.readEndElement();
 	}

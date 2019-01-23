@@ -73,7 +73,8 @@ public class Interest extends GenericXMLEncodable implements XMLEncodable, Compa
 	protected Integer _answerOriginKind = null;
 	protected Integer _scope;
 	protected byte[] _interestLifetime = null;		// For now we don't have the ability to set an interest lifetime
-	protected byte[] _nonce;
+        protected Integer _controlpacketid;	//add by xu
+        protected byte[] _nonce;
 
 	public long userTime;
 	
@@ -499,6 +500,10 @@ public class Interest extends GenericXMLEncodable implements XMLEncodable, Compa
 		if (decoder.peekStartElement(CCNProtocolDTags.InterestLifetime)) {
 			_interestLifetime = decoder.readBinaryElement(CCNProtocolDTags.InterestLifetime);
 		}
+     
+                if (decoder.peekStartElement(CCNProtocolDTags.ControlPacketID)) {// add by xu
+                        _controlpacketid = decoder.readIntegerElement(CCNProtocolDTags.ControlPacketID);
+                }
 		
 		if (decoder.peekStartElement(CCNProtocolDTags.Nonce)) {
 			_nonce = decoder.readBinaryElement(CCNProtocolDTags.Nonce);
