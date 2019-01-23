@@ -50,7 +50,7 @@ void qos_send_message_0(struct ccnd_handle *h)
   int c_t = 0;
   const char *intvl_c;
   struct timeval tv;
-  int bw = 10;
+  int bw = 5;
   intvl_c = getenv("CCND_INTVL_G");
   if(intvl_c !=NULL){
      intvl_b = strtoul(intvl_c, NULL, 10);
@@ -107,7 +107,7 @@ void qos_send_message_1(struct ccnd_handle *h)
   int c_t = 0;
   const char *intvl_c;
   struct timeval tv;
-  int bw = 10;
+  int bw = 5;
   intvl_c = getenv("CCND_INTVL_N");
   if(intvl_c !=NULL){
      intvl_b = strtoul(intvl_c, NULL, 10);
@@ -162,7 +162,7 @@ void qos_send_message_2(struct ccnd_handle *h)
   int size;
   int intvl_b;
   int c_t = 0;
-  int bw = 10;
+  int bw = 5;
   const char *intvl_c;
   struct timeval tv;
   intvl_c = getenv("CCND_INTVL_R");
@@ -243,16 +243,16 @@ void norm_send_message(struct ccnd_handle *h)
 			      break;
 			  case 1:
 			      //ccnd_msg(h, "ONE guarantee queue running: 1");
-                              bw = 10;
+                              bw = 15;
 			      break;
-			  //case 2:
+			  case 2:
 			      //ccnd_msg(h, "Two guarantee queue running: 2");
-                             // bw = 10;
-		             // break;
-			  //case 3:
+                              bw = 10;
+		              break;
+			  case 3:
 			      //ccnd_msg(h, "Three guarantee queue running: 3");
-                              //bw = 5;
-			      //break;
+                              bw = 5;
+			      break;
 			  default:
 			      ccnd_msg(h, "Default: No guarantee queue running: Error");// could not happen
 			      break;
@@ -288,7 +288,7 @@ int
 main(int argc, char **argv)
 {
     struct ccnd_handle *h;
-	
+    
     /*<!-- add by xu for multi-thread */
     int ret_thrd0;
     int ret_thrd1;

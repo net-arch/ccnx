@@ -1,5 +1,5 @@
 /*
- *
+/*
  * ccnd/ccnd.c
  *
  * Main program of ccnd - the CCNx Daemon
@@ -96,6 +96,9 @@ static int nameprefix_seek(struct ccnd_handle *h,
                            const unsigned char *msg,
                            struct ccn_indexbuf *comps,
                            int ncomps);
+static void register_new_face(struct ccnd_handle *h, struct face *face);
+static void update_forward_to(struct ccnd_handle *h,
+                              struct nameprefix_entry *npe);
 static void stuff_and_send(struct ccnd_handle *h, struct face *face,
                            const unsigned char *data1, size_t size1,
                            const unsigned char *data2, size_t size2,
@@ -147,11 +150,6 @@ static void strategy_callout(struct ccnd_handle *h,
                              struct interest_entry *ie,
                              enum ccn_strategy_op op,
                              unsigned faceid);
-static void
-register_new_face(struct ccnd_handle *h, struct face *face);
-
-static void
-update_forward_to(struct ccnd_handle *h, struct nameprefix_entry *npe);
 
 #ifndef CCND_WTHZ
 /**
@@ -181,7 +179,7 @@ update_forward_to(struct ccnd_handle *h, struct nameprefix_entry *npe);
 #endif
 
 /**
- main listener
+ * Name of our unix-domain listener
  *
  * This tiny bit of global state is needed so that the unix-domain listener
  * can be removed at shutdown.
@@ -1190,7 +1188,6 @@ consume_interest(struct ccnd_handle *h, struct interest_entry *ie)
     int res;
     
     hashtb_start(h->interest_tab, e);
-    ccnd_msg(h,"interest_msg :: %s  ,,, size :: %d",ie->interest_msg,ie->size -1);//add by Fumiya
     res = hashtb_seek(e, ie->interest_msg, ie->size - 1, 1);
     if (res != HT_OLD_ENTRY)
         abort();
@@ -4715,7 +4712,6 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
         ccn_indexbuf_destroy(&comps);
         return;
     }
-    //comment by F : ここから下でinterestの中身とpit, csの中身を見ながら
     /* <!-- add by xu */
     if (pi->control != -1) {
         h->interest_control_flag = pi->control;
@@ -4742,7 +4738,6 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
     //else
     //    ccnd_msg(h, "Interest control ID has no value");
    /*    add by xu end -->*/
-    //comment by F : ここでfaceのinterestの数を数えてる?
     ccnd_meter_bump(h, face->meter[FM_INTI], 1);
     if (pi->scope >= 0 && pi->scope < 2 &&
              (face->flags & CCN_FACE_GG) == 0) {
@@ -4760,9 +4755,7 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
                          pi->magic);
             }
         }
-	
         h->interests_accepted += 1;
-	//comment by F : ここでinterestのnonceが重複していないかhandlerのnonce_tableを見て確認する
         res = nonce_ok(h, face, msg, pi, NULL, 0);
         if (res == 0) {
             if (h->debug & 2)
@@ -4771,17 +4764,8 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
             indexbuf_release(h, comps);
             return;
         }
-	//comment by F : Search for hashtable of interest. If the same thing does not exist Return null as return value. 
         ie = hashtb_lookup(h->interest_tab, msg,
                            pi->offset[CCN_PI_B_InterestLifetime]);
-	/*add by F for Check*/
-	int selecter;
-	for(selecter = CCN_PI_B_Name;selecter<=CCN_PI_E_Name;selecter++){
-		printf("%d",pi->offset[selecter]);
-	}
-	printf("\n");
-	/**/
-
         if (ie != NULL) {
             /* Since this is in the PIT, we do not need to check the CS. */
             indexbuf_release(h, comps);
@@ -4815,11 +4799,13 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
             last_match = NULL;
             content = find_first_match_candidate(h, msg, pi);
             if (content != NULL && (h->debug & 8))
-                ccnd_debug_content(h, __LINE__, "first_candidate", NULL, content);
+                ccnd_debug_content(h, __LINE__, "first_candidate", NULL,
+                                   content);
             if (content != NULL &&
                 !content_matches_prefix(h, content, flatname)) {
                 if (h->debug & 8)
-                    ccnd_debug_ccnb(h, __LINE__, "prefix_mismatch", NULL, msg, size);
+                    ccnd_debug_ccnb(h, __LINE__, "prefix_mismatch", NULL,
+                                    msg, size);
                 content = NULL;
             }
             for (try = 0; content != NULL; try++) {
@@ -5484,7 +5470,6 @@ get_dgram_source(struct ccnd_handle *h, struct face *face,
  * This is used to handle things originating from the internal client -
  * its output is input for face 0.
  */
-
 static void
 process_input_buffer(struct ccnd_handle *h, struct face *face)
 {
@@ -5646,7 +5631,6 @@ process_internal_client_buffer(struct ccnd_handle *h)
     face->inbuf = ccn_grab_buffered_output(h->internal_client);
     if (face->inbuf == NULL)
         return;
-    printf("there is output from internal client\n");
     ccnd_meter_bump(h, face->meter[FM_BYTI], face->inbuf->length);
     process_input_buffer(h, face);
     ccn_charbuf_destroy(&(face->inbuf));
@@ -5918,7 +5902,6 @@ prepare_poll_fds(struct ccnd_handle *h)
 void
 ccnd_run(struct ccnd_handle *h)
 {
-	printf("now on ccnd main loop ccnd.c !!!\n");
     int i;
     int res;
     int timeout_ms = -1;
@@ -6769,3 +6752,4 @@ queue_elem_t queue_front(const queue_t *q) {
 queue_elem_t queue_back(const queue_t *q) {
     return q->elems[q->rear - 1];
 }
+

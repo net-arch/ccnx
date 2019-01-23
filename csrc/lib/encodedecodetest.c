@@ -85,7 +85,9 @@ encode_message(struct ccn_charbuf *message, struct path * name_path,
         ccn_name_append_str(path, name_path->comps[i]);
     }
 
-    res = ccn_encode_ContentObject(message, path, signed_info, data, len, digest_algorithm, pkey);
+    /* <!--kuwayama */
+    res = ccn_encode_ContentObject(message, path, signed_info, data, len, digest_algorithm, pkey, DEFAULT);
+    /*  kuwayama--> */
 
     if (res != 0) {
         fprintf(stderr, "Failed to encode ContentObject\n");

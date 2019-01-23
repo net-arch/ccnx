@@ -106,4 +106,7 @@ int ccn_schedule_cancel(struct ccn_schedule *, struct ccn_scheduled_event *);
  */
 int ccn_schedule_run(struct ccn_schedule *);
 
+/* <!--kuwayama */
+int ccn_schedule_run_qos(struct ccn_schedule *, struct ccn_schedule *);
+/*  kuwayama--> */
 #endif

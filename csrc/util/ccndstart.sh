@@ -16,6 +16,8 @@
 # This script should be installed in the same place as ccnd, ccndc, ccndsmoketest, ...
 # adjust the path to get consistency.
 D=`dirname "$0"`
+echo ${D}
+echo $PATH
 export PATH="$D:$PATH"
 
 # Source a file containing settings, if present.

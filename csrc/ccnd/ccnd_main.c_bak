@@ -1,0 +1,98 @@
+/**
+ * @file ccnd_main.c
+ *
+ * A CCNx program.
+ *
+ * Copyright (C) 2009-2011, 2013 Palo Alto Research Center, Inc.
+ *
+ * This work is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License version 2 as published by the
+ * Free Software Foundation.
+ * This work is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details. You should have received a copy of the GNU General Public
+ * License along with this program; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#include <signal.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <sys/time.h> // add by xu
+#include <string.h> //add by xu
+#include "ccnd_private.h"
+
+//add by xu
+
+void qos_send_message(struct ccnd_handle *h)
+{
+  int i = 0;
+  while(i<1000000000000)
+ {
+      //ccnd_msg(h, "address of qos queue:   %p", h->qos_queue);
+      if(!queue_empty(h->qos_queue)){
+          int size = queue_size(h->qos_queue);
+          int count;
+          for(count = 0; count < size; count ++){
+            /*
+            ccnd_msg(h, "   size of qos queue:   %ld", queue_size(h->qos_queue));
+            ccnd_msg(h, "        face adderss:   %p", queue_front(h->qos_queue).face);
+            ccnd_msg(h, "        data adderss:   %p", queue_front(h->qos_queue).c->buf);
+            ccnd_msg(h, "           data size:   %d", queue_front(h->qos_queue).c->length);*/
+            ccnd_send(h, queue_front(h->qos_queue).face, queue_front(h->qos_queue).data, queue_front(h->qos_queue).size);
+            queue_pop(h->qos_queue);
+            // here should release data buffer
+            //charbuf_release(h, queue_front(h->qos_queue).c);
+            usleep(2000);
+          }
+      }
+      usleep(1);
+      i++;
+  }
+
+}
+
+
+static int
+stdiologger(void *loggerdata, const char *format, va_list ap)
+{
+    FILE *fp = (FILE *)loggerdata;
+    return(vfprintf(fp, format, ap));
+}
+
+int
+main(int argc, char **argv)
+{
+    struct ccnd_handle *h;
+    
+    //add by xu
+    pthread_t thread1;
+    int ret_thrd1;
+
+    if (argc > 1) {
+        fprintf(stderr, "%s", ccnd_usage_message);
+        exit(1);
+    }
+    signal(SIGPIPE, SIG_IGN);
+    h = ccnd_create(argv[0], stdiologger, stderr);
+    
+    //add by xu
+    ret_thrd1 = pthread_create(&thread1, NULL, (void *)&qos_send_message, h);
+
+    if (h == NULL)
+        exit(1);
+    ccnd_run(h);
+    ccnd_msg(h, "exiting.");
+    ccnd_destroy(&h);
+    ERR_remove_state(0);
+    EVP_cleanup();
+    CRYPTO_cleanup_all_ex_data();
+    exit(0);
+}

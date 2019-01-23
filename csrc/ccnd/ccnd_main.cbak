@@ -1,0 +1,263 @@
+/**
+ * @file ccnd_main.c
+ *
+ * A CCNx program.
+ *
+ * Copyright (C) 2009-2011, 2013 Palo Alto Research Center, Inc.
+ *
+ * This work is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License version 2 as published by the
+ * Free Software Foundation.
+ * This work is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details. You should have received a copy of the GNU General Public
+ * License along with this program; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#include <signal.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <sys/time.h> // add by xu
+#include <string.h> //add by xu
+#include "ccnd_private.h"
+
+//add by xu
+void qos_send_message_bak_(struct ccnd_handle *h)
+{
+  int i = 0;
+  struct timeval tv;
+  while(i<1000000000000)
+ {
+
+      int qos = 200;
+      int norm = 100;
+      long tv_usec;
+      long tv_end;
+      gettimeofday(&tv, NULL);
+      tv_usec = tv.tv_usec;
+      //ccnd_msg(h, "address of qos queue:   %p", h->qos_queue);
+      if(!queue_empty(h->qos_queue)){
+          int size = queue_size(h->qos_queue);
+          //if (size > 200)
+            ccnd_msg(h, "sIze oF qOs quEue: %d", size);
+          int count;
+          if(size>=qos){
+            for(count = 0; count < qos; count ++){
+              ccnd_send(h, queue_front(h->qos_queue).face, queue_front(h->qos_queue).data, queue_front(h->qos_queue).size);
+              queue_pop(h->qos_queue);
+              //usleep(1);
+            }
+          }
+          else{ 
+            for(count = 0; count < size; count ++){
+              ccnd_send(h, queue_front(h->qos_queue).face, queue_front(h->qos_queue).data, queue_front(h->qos_queue).size);
+              queue_pop(h->qos_queue);
+              //usleep(1);
+            }
+          }
+      }
+      if(!queue_empty(h->norm_queue)){
+          int size = queue_size(h->norm_queue);
+          int count;
+          if(size >= norm){
+            for(count = 0; count < norm; count ++){
+              ccnd_send(h, queue_front(h->norm_queue).face, queue_front(h->norm_queue).data, queue_front(h->norm_queue).size);
+              queue_pop(h->norm_queue);
+              //usleep(1);
+            // here should release data buffer
+            }
+          }
+          else{ 
+             for(count = 0; count < size; count ++){
+               ccnd_send(h, queue_front(h->norm_queue).face, queue_front(h->norm_queue).data, queue_front(h->norm_queue).size);
+               queue_pop(h->norm_queue);
+               //usleep(1);
+               // here should release data buffer
+            }
+
+          }
+      }
+      gettimeofday(&tv, NULL);
+      tv_end = tv.tv_usec;
+      //usleep(100 - (tv_end - tv_usec));
+      usleep(1);
+      i++;
+  }
+
+}
+void qos_send_message_bak(struct ccnd_handle *h)
+{
+  int i = 0;
+  while(i<1000000000000)
+ {
+      //ccnd_msg(h, "address of qos queue:   %p", h->qos_queue);
+      if(!queue_empty(h->qos_queue)){
+          int size = queue_size(h->qos_queue);
+          int count;
+          for(count = 0; count < size; count ++){
+            /*
+            ccnd_msg(h, "   size of qos queue:   %ld", queue_size(h->qos_queue));
+            ccnd_msg(h, "        face adderss:   %p", queue_front(h->qos_queue).face);
+            ccnd_msg(h, "        data adderss:   %p", queue_front(h->qos_queue).c->buf);
+            ccnd_msg(h, "           data size:   %d", queue_front(h->qos_queue).c->length);*/
+            ccnd_send(h, queue_front(h->qos_queue).face, queue_front(h->qos_queue).data, queue_front(h->qos_queue).size);
+            queue_pop(h->qos_queue);
+            // here should release data buffer
+            //charbuf_release(h, queue_front(h->qos_queue).c);
+            usleep(1000);
+          }
+      }
+      if(!queue_empty(h->norm_queue)){
+          int size = queue_size(h->norm_queue);
+          int count;
+          for(count = 0; count < size; count ++){
+            /*
+            ccnd_msg(h, "   size of qos queue:   %ld", queue_size(h->qos_queue));
+            ccnd_msg(h, "        face adderss:   %p", queue_front(h->qos_queue).face);
+            ccnd_msg(h, "        data adderss:   %p", queue_front(h->qos_queue).c->buf);
+            ccnd_msg(h, "           data size:   %d", queue_front(h->qos_queue).c->length);*/
+            ccnd_send(h, queue_front(h->norm_queue).face, queue_front(h->norm_queue).data, queue_front(h->norm_queue).size);
+            queue_pop(h->norm_queue);
+            // here should release data buffer
+            //charbuf_release(h, queue_front(h->qos_queue).c);
+            usleep(2000);
+          }
+      }
+ 
+      usleep(1000);
+      i++;
+  }
+
+}
+void qos_send_message(struct ccnd_handle *h)
+{
+  int i = 0;
+  struct timeval tv;
+  long int count_n = 0;
+  while(i<1000000000000)
+ {
+      if(!queue_empty(h->qos_queue)){
+          //ccnd_msg(h, "address of qos queue:   %p", h->qos_queue);
+          int size = queue_size(h->qos_queue);
+          int count;
+          long tv_usec;
+          long tv_end;
+ 
+          if (size > 20){
+            for(count = 0; count < 20; count ++){
+              //gettimeofday(&tv, NULL);
+              tv_usec = tv.tv_usec;
+              ccnd_send(h, queue_front(h->qos_queue).face, queue_front(h->qos_queue).data, queue_front(h->qos_queue).size);
+              queue_pop(h->qos_queue);
+              gettimeofday(&tv, NULL);
+              //tv_end = tv.tv_usec;
+              //ccnd_msg(h, "consume time: %d", tv_end - tv_usec);
+              ccnd_msg(h, "Size: %d", queue_front(h->qos_queue).size);
+              ccnd_msg(h, "count: %ld", count_n++);
+              usleep(22400/4);
+            }
+         }
+         else{
+            for(count = 0; count < size; count ++){
+              ccnd_send(h, queue_front(h->qos_queue).face, queue_front(h->qos_queue).data, queue_front(h->qos_queue).size);
+              queue_pop(h->qos_queue);
+              ccnd_msg(h, "Size: %d", queue_front(h->qos_queue).size);
+              ccnd_msg(h, "count: %ld", count_n++);
+              usleep(22400/4);
+            }
+
+           //ccnd_msg(h, "size is less than 10");// for(count = )
+         }
+         
+      }
+      //usleep(50000);
+      i++;
+  }
+
+}
+void norm_send_message(struct ccnd_handle *h)
+{
+  int i = 0;
+  while(i<1000000000000)
+ {
+      if(!queue_empty(h->norm_queue)){
+          //ccnd_msg(h, "address of qos queue:   %p", h->qos_queue);
+          int size = queue_size(h->norm_queue);
+          int count;
+          ccnd_msg(h, "sIze oF qOs quEue: %d", size);
+          if (size > 20){
+            for(count = 0; count < 20; count ++){
+              ccnd_send(h, queue_front(h->norm_queue).face, queue_front(h->norm_queue).data, queue_front(h->norm_queue).size);
+              queue_pop(h->norm_queue);
+              usleep(5000);
+            }
+         }
+         else{
+            for(count = 0; count < size; count ++){
+              ccnd_send(h, queue_front(h->norm_queue).face, queue_front(h->norm_queue).data, queue_front(h->norm_queue).size);
+              queue_pop(h->norm_queue);
+              usleep(5000);
+            }
+
+           ccnd_msg(h, "size is less than 10");// for(count = )
+         }
+         
+      }
+      usleep(100000);
+      i++;
+  }
+
+}
+
+
+
+
+
+static int
+stdiologger(void *loggerdata, const char *format, va_list ap)
+{
+    FILE *fp = (FILE *)loggerdata;
+    return(vfprintf(fp, format, ap));
+}
+
+int
+main(int argc, char **argv)
+{
+    struct ccnd_handle *h;
+    
+    //add by xu
+    pthread_t thread1;
+    int ret_thrd1;
+    pthread_t thread2;
+    int ret_thrd2;
+
+
+    if (argc > 1) {
+        fprintf(stderr, "%s", ccnd_usage_message);
+        exit(1);
+    }
+    signal(SIGPIPE, SIG_IGN);
+    h = ccnd_create(argv[0], stdiologger, stderr);
+    
+    //add by xu
+    ret_thrd1 = pthread_create(&thread1, NULL, (void *)&qos_send_message, h);
+    ret_thrd2 = pthread_create(&thread2, NULL, (void *)&norm_send_message, h);
+
+    if (h == NULL)
+        exit(1);
+    ccnd_run(h);
+    ccnd_msg(h, "exiting.");
+    ccnd_destroy(&h);
+    ERR_remove_state(0);
+    EVP_cleanup();
+    CRYPTO_cleanup_all_ex_data();
+    exit(0);
+}

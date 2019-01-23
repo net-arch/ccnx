@@ -82,6 +82,9 @@ ccndc_initialize_data(void) {
     }
     
     self->ccn_handle = ccn_create();
+    if (self->ccn_handle == NULL) {
+    	ON_ERROR_EXIT(-1, "Unable to create ccn handle");
+    }
     ON_ERROR_EXIT(ccn_connect(self->ccn_handle, NULL), "Unable to connect to local ccnd");
     ON_ERROR_EXIT(ccndc_get_ccnd_id(self), "Unable to obtain ID of local ccnd");
     

@@ -475,6 +475,8 @@ send_adjacency_solicit(struct ccnd_handle *ccnd, struct face *face)
     ccnb_tagged_putf(templ, CCN_DTAG_AnswerOriginKind, "%d", 0);
     /* Only talk to direct peers */
     ccnb_tagged_putf(templ, CCN_DTAG_Scope, "2");
+    /* add by xu */
+    //ccnb_tagged_putf(templ, CCN_DTAG_ControlPacketID, "%d", DEFAULT);
     /* Bypass the FIB - send to just the face we want */
     ccnb_tagged_putf(templ, CCN_DTAG_FaceID, "%u", face->faceid);
     ccnb_element_end(templ); /* Interest */
@@ -678,6 +680,7 @@ ccnd_adjacency_offer_or_commit_req(struct ccnd_handle *ccnd, struct face *face)
     ccnb_element_end(templ); /* Exclude */
     ccnb_tagged_putf(templ, CCN_DTAG_AnswerOriginKind, "%d", 0);
     ccnb_tagged_putf(templ, CCN_DTAG_Scope, "2");
+    ccnb_tagged_putf(templ, CCN_DTAG_ControlPacketID, "%d", DEFAULT);//add by xu
     ccnb_tagged_putf(templ, CCN_DTAG_FaceID, "%u", face->faceid);
     ccnb_element_end(templ); /* Interest */
     action = calloc(1, sizeof(*action));
