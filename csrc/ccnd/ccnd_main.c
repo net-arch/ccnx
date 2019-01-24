@@ -106,7 +106,6 @@ bandwidth_calculation(struct ccnd_handle *h){
                         else
                             f->number_of_guarantee_queue--;
 			q->use_flag = 0;
-			ccnd_msg(h,"queue delete remianing queue D:%d  G:%d",f->number_of_default_queue, f->number_of_guarantee_queue);
                     }
 		    if (q->use_flag == 1 && q->sender == NULL && time_diff(q->last_use,tv) >= 0.3) {
                         q->use_flag = 2;
