@@ -163,9 +163,6 @@ static int
 stdiologger(void *loggerdata, const char *format, va_list ap)
 {
     FILE *fp = (FILE *)loggerdata;
-    FILE *logfile = fopen("logfile.txt",a);
-    fprintf(logfile,format, ap);
-    fclose(logfile);
     return(vfprintf(fp, format, ap));
 }
 
