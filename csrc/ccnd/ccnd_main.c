@@ -148,7 +148,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 			        q->bw_flag = 0;
                     }
 		    }
-		    get_face_address(h,f);
+		    //get_face_address(h,f);
 	    }
 	}
     }
