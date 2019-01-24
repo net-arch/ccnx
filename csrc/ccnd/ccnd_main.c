@@ -52,11 +52,12 @@ unsigned char * get_face_address(const struct sockaddr *sa){
     switch (sa->sa_family) {
         case AF_INET:
             addr4 = (struct sockaddr_in *)sa;
-            rawaddr = (const unsigned char *)&addr4->sin_addr.s_addr;
+            rawaddr = (unsigned char *)&addr4->sin_addr.s_addr;
         case AF_INET6:
             addr6 = (struct sockaddr_in6 *)sa;
-            rawaddr = (const unsigned char *)&addr6->sin6_addr;
+            rawaddr = (unsigned char *)&addr6->sin6_addr;
         default:
+            rawaddr = NULL;
     }
     return rawaddr;
 }
