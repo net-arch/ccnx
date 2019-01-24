@@ -43,7 +43,7 @@ static double time_diff(struct timeval s, struct timeval e){
 }
 
 unsigned char * get_face_address(const struct sockaddr *sa){
-    const unsigned char *rawaddr = NULL;
+    unsigned char *rawaddr = NULL;
     const struct sockaddr_in *addr4 = NULL;
     const struct sockaddr_in6 *addr6 = NULL;
     switch (sa->sa_family) {
@@ -53,6 +53,7 @@ unsigned char * get_face_address(const struct sockaddr *sa){
         case AF_INET6:
             addr6 = (struct sockaddr_in6 *)sa;
             rawaddr = (const unsigned char *)&addr6->sin6_addr;
+        default:
     }
     return rawaddr;
 }
