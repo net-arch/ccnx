@@ -45,21 +45,29 @@ static double time_diff(struct timeval s, struct timeval e){
     return passed;
 }
 
-unsigned char * get_face_address(const struct sockaddr *sa){
-    unsigned char *rawaddr = NULL;
-    const struct sockaddr_in *addr4 = NULL;
-    const struct sockaddr_in6 *addr6 = NULL;
-    switch (sa->sa_family) {
-        case AF_INET:
-            addr4 = (struct sockaddr_in *)sa;
-            rawaddr = (unsigned char *)&addr4->sin_addr.s_addr;
-        case AF_INET6:
-            addr6 = (struct sockaddr_in6 *)sa;
-            rawaddr = (unsigned char *)&addr6->sin6_addr;
-        default:
-            rawaddr = NULL;
+void get_face_address(struct ccnd_handle *h, struct face *face){
+    const struct sockaddr *addr = face->addr;
+    int port = 0;
+    const unsigned char *rawaddr = NULL;
+    char printable[80];
+    const char *peer = NULL;
+    if (addr->sa_family == AF_INET6) {
+        const struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
+        rawaddr = (const unsigned char *)&addr6->sin6_addr;
+        port = htons(addr6->sin6_port);
     }
-    return rawaddr;
+    else if (addr->sa_family == AF_INET) {
+        const struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
+        rawaddr = (const unsigned char *)&addr4->sin_addr.s_addr;
+        port = htons(addr4->sin_port);
+    }
+    if (rawaddr != NULL)
+        peer = inet_ntop(addr->sa_family, rawaddr, printable, sizeof(printable));
+    if (peer == NULL)
+        peer = "(unknown)";
+    ccnd_msg(h,
+             "id=%d [%s] port %d",
+             face->faceid, peer, port);
 }
 
 
@@ -140,7 +148,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 			        q->bw_flag = 0;
                     }
 		    }
-		    ccnd_msg(h,"bandwidth for %s",get_face_address(f->addr));
+		    get_face_address(h,f);
 	    }
 	}
     }
