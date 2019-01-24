@@ -126,7 +126,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 		    }
 		    if(bw_amount > 0){
 		        ccnd_msg(h,"bandwidth reserve %d for [face id %d]",bw_amount,f->faceid);
-		        ccnd_msg(h,"number of d_queue [%d] g_queue [%d]",f->number_of_default_queue, f->number_of_guarantee_queue)
+		        ccnd_msg(h,"number of d_queue [%d] g_queue [%d]",f->number_of_default_queue, f->number_of_guarantee_queue);
 		    }
 	    }
 	}
