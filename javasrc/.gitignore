@@ -8,6 +8,7 @@ CCN_DEBUG_DATA/
 pmd-eclipse.log
 junit*.properties
 repotest/
-!lib/
+!lib/*.jar
+!.classpath
 # copy of dictionary from schema directory, placed here by top-level make
 tagname.csvdict
