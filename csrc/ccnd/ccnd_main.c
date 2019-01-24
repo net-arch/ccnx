@@ -29,7 +29,10 @@
 #include <string.h> //add by xu
 #include "ccnd_private.h"
 #include <ccn/charbuf.h> //add by xu
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #define UNIT_CONVERT 8
 
 /*add by Fumiya for adaptive bandwidth control*/
