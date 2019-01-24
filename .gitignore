@@ -13,7 +13,7 @@
 00MANIFEST
 bin/
 include
-/lib
+./lib
 reserch/
 log
 testdir
