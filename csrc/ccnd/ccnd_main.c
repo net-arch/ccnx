@@ -148,7 +148,9 @@ bandwidth_calculation(struct ccnd_handle *h){
 			        q->bw_flag = 0;
                     }
 		    }
-		    //get_face_address(h,f);
+		    if(bw_of_g > 0.0){
+		        ccnd_msg(h,"bandwidth reserve %f for [face id %d]",bw_of_g,f->faceid);
+		    }
 	    }
 	}
     }
