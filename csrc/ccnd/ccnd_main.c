@@ -45,32 +45,6 @@ static double time_diff(struct timeval s, struct timeval e){
     return passed;
 }
 
-void get_face_address(struct ccnd_handle *h, struct face *face){
-    const struct sockaddr *addr = face->addr;
-    int port = 0;
-    const unsigned char *rawaddr = NULL;
-    char printable[80];
-    const char *peer = NULL;
-    if (addr->sa_family == AF_INET6) {
-        const struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
-        rawaddr = (const unsigned char *)&addr6->sin6_addr;
-        port = htons(addr6->sin6_port);
-    }
-    else if (addr->sa_family == AF_INET) {
-        const struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
-        rawaddr = (const unsigned char *)&addr4->sin_addr.s_addr;
-        port = htons(addr4->sin_port);
-    }
-    if (rawaddr != NULL)
-        peer = inet_ntop(addr->sa_family, rawaddr, printable, sizeof(printable));
-    if (peer == NULL)
-        peer = "(unknown)";
-    ccnd_msg(h,
-             "id=%d [%s] port %d",
-             face->faceid, peer, port);
-}
-
-
 static void
 bandwidth_calculation(struct ccnd_handle *h){
 	struct timeval tv;
@@ -152,6 +126,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 		    }
 		    if(bw_amount > 0){
 		        ccnd_msg(h,"bandwidth reserve %d for [face id %d]",bw_amount,f->faceid);
+		        ccnd_msg(h,"number of d_queue [%d] g_queue [%d]",f->number_of_default_queue, f->number_of_guarantee_queue)
 		    }
 	    }
 	}
