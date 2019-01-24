@@ -29,6 +29,7 @@
 #include <string.h> //add by xu
 #include "ccnd_private.h"
 #include <ccn/charbuf.h> //add by xu
+#include <sys/socket.h>
 #define UNIT_CONVERT 8
 
 /*add by Fumiya for adaptive bandwidth control*/
@@ -39,6 +40,21 @@ static double time_diff(struct timeval s, struct timeval e){
     double passed = sec + micro / 1000.0 / 1000.0;
 
     return passed;
+}
+
+unsigned char * get_face_address(const struct sockaddr *sa){
+    const unsigned char *rawaddr = NULL;
+    const struct sockaddr_in *addr4 = NULL;
+    const struct sockaddr_in6 *addr6 = NULL;
+    switch (sa->sa_family) {
+        case AF_INET:
+            addr4 = (struct sockaddr_in *)sa;
+            rawaddr = (const unsigned char *)&addr4->sin_addr.s_addr;
+        case AF_INET6:
+            addr6 = (struct sockaddr_in6 *)sa;
+            rawaddr = (const unsigned char *)&addr6->sin6_addr;
+    }
+    return rawaddr;
 }
 
 
@@ -91,39 +107,36 @@ bandwidth_calculation(struct ccnd_handle *h){
 	if((tv.tv_sec - time_last_1sec.tv_sec) >= 1){
 	    time_last_1sec = tv;
 
-            for (i = 0; i < h->face_limit ; i++){
-                if (h->faces_by_faceid[i] == NULL)
-                    continue;
-                f = h->faces_by_faceid[i];
-		bw_of_g = 3000000.0 * (double)(f->amount_size_of_guarantee - f->send_size_of_guarantee) / (4000.0 * 94.0);
-		if(bw_of_g > 3000000.0){
-            		bw_of_g = 3000000.0;
-		}
-                for (j = 0;  j<QOS_QUEUE ; j++) {
-                    if (f->qos_q[j] == NULL)
-                        break;
-                    else{
-                        q = f->qos_q[j];
-			if (q->use_flag == 0)
-                            continue;
-
-                        if ((f->number_of_default_queue + f->number_of_guarantee_queue) > 0){
-                            if (q->queue_type == CQ_DEFAULT) {
-                                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue);
-                            }else{
-                                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue)
-                                      + (int)bw_of_g / f->number_of_guarantee_queue;
-				//q->bandwidth = (int)bw_of_g / f->number_of_guarantee_queue; //これがdefaultのキューがめっちゃ存在した場合
-                            }
-			}
-                        else
-                            q->bandwidth = q->bandwidth_of_face;
-
-			q->remaining_bandwidth = q->bandwidth;
-                        q->bw_flag = 0;
+	    for (i = 0; i < h->face_limit ; i++){
+	        if (h->faces_by_faceid[i] == NULL)
+	            continue;
+	        f = h->faces_by_faceid[i];
+		    bw_of_g = 3000000.0 * (double)(f->amount_size_of_guarantee - f->send_size_of_guarantee) / (4000.0 * 94.0);
+		    if(bw_of_g > 3000000.0){
+		        bw_of_g = 3000000.0;
+		    }
+		    for (j = 0;  j<QOS_QUEUE ; j++) {
+		        if (f->qos_q[j] == NULL)
+		            break;
+		        else{
+		            q = f->qos_q[j];
+			        if (q->use_flag == 0)
+			            continue;
+			        if ((f->number_of_default_queue + f->number_of_guarantee_queue) > 0){
+			            if (q->queue_type == CQ_DEFAULT) {
+			                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue);
+			            }else{
+			                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue) + (int)bw_of_g / f->number_of_guarantee_queue;
+			            }
+			        }
+			        else
+			            q->bandwidth = q->bandwidth_of_face;
+			        q->remaining_bandwidth = q->bandwidth;
+			        q->bw_flag = 0;
                     }
-                }
-            }
+		    }
+		    ccnd_msg(h,"bandwidth for %s",get_face_address(f->addr));
+	    }
 	}
     }
 }

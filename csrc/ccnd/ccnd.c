@@ -2174,7 +2174,6 @@ content_sender_qos(struct ccn_schedule *sched,
 	    if(content->control == GUARANTEE){
                 face->send_size_of_guarantee += content->size;
             }
-	    ccnd_msg(h,"送信済:%d 未送信:%d 現帯域幅:%d",face->send_size_of_guarantee,face->amount_size_of_guarantee,q->bandwidth);
             send_content(h, face, content);
 	    struct timeval last;
     	    gettimeofday(&last,NULL);
