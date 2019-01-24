@@ -13,7 +13,8 @@
 00MANIFEST
 bin/
 include
-./lib
+/lib
+!/javasrc/lib
 reserch/
 log
 testdir
