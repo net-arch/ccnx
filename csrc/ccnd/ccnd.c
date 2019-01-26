@@ -433,7 +433,7 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
         q->control_queue = ccn_indexbuf_create();
 	//add by Fumiya
 	q->content_name = ccn_charbuf_create();
-	q->bandwidth = 800000000;
+	q->bandwidth = 10000000;
         q->remaining_bandwidth = q->bandwidth;
         struct timeval create;
         gettimeofday(&create,NULL);
@@ -2257,14 +2257,14 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
                 ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
                 q = face->qos_q[i];
 		q->queue_type = CQ_GUARANTEE;
-		q->bandwidth_of_face = 800000000;
+		q->bandwidth_of_face = 10000000;
             } else {
                 face->number_of_default_queue++;
 		face->qos_q[i] = content_queue_create(h, face, c);
                 ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
                 q = face->qos_q[i];
                 q->queue_type = CQ_DEFAULT;
-		q->bandwidth_of_face = 800000000;
+		q->bandwidth_of_face = 10000000;
             }
             break;
         }
