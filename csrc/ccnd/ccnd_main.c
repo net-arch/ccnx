@@ -125,8 +125,7 @@ bandwidth_calculation(struct ccnd_handle *h){
                     }
 		    }
 		    if(bw_amount > 0){
-		        ccnd_msg(h,"#CANUSE#:%d,#FACE#:%d,#SENDAMOUNT#:%d",bw_amount,f->faceid,f->send_size_of_guarantee);
-			ccnd_msg(h,"number of d_queue [%d] g_queue [%d]",f->number_of_default_queue, f->number_of_guarantee_queue);
+		        ccnd_msg(h,"#CANUSE#:%d #FACE#:%d #SENDAMOUNT#:%d",bw_amount,f->faceid,f->send_size_of_guarantee);
 		    }
 	    }
 	}
