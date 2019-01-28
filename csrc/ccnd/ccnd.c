@@ -464,10 +464,6 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
             free(q);
             return(NULL);
         }
-	if (q->content_name == NULL) {
-	    free(q);
-	    return(NULL);
-	}
         q->sender = NULL;
     }
     return(q);
@@ -768,7 +764,7 @@ finalize_face(struct hashtb_enumerator *e)
         ccnd_meter_destroy(&face->meter[m]);
 
     for (m = 0; m < 100 ;m++ ){
-        ccn_charbuf_destroy(&face->gList[m]);
+        ccn_charbuf_destroy(&face->gList[m]->content_name);
     }
 }
 

@@ -52,14 +52,14 @@ bandwidth_calculation(struct ccnd_handle *h){
 	int k = 0;
 
     unsigned i;
-    int j;
-    int n;
+//    int j;
+//    int n;
     struct face *f;
-    struct content_queue *q;
+//    struct content_queue *q;
     
-    double bw_of_g;
-    int bw_of_face;
-    int bw_amount;
+//    double bw_of_g;
+//    int bw_of_face;
+//    int bw_amount;
 
     while(k<100000000000000){
 	gettimeofday(&tv,NULL);
@@ -94,7 +94,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 	if((tv.tv_sec - time_last_1sec.tv_sec) >= 1){
 	    time_last_1sec = tv;
 
-	    for (i = 0; i < h->face_limit ; i++){
+	    for (j = 0; j < h->face_limit ; j++){
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
