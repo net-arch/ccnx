@@ -2274,6 +2274,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (face->g_queue == NULL) {
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queue = content_queue_create(h, face, c);
+        ccnd_msg(,"q_queue create OK");
     }
     if (face->d_queue == NULL) {
         c = choose_content_delay_class(h, face->faceid, content->flags);
@@ -2321,6 +2322,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         q->sender = ccn_schedule_event(h->sched, delay,
                                        content_sender_qos, q, face->faceid);
     }
+    ccnd_msg(,"face_send_queue_insert_qos OK");
     return (ans);
 }
 //add by Fumiya End
