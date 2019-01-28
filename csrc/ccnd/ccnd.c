@@ -5965,11 +5965,15 @@ process_internal_client_buffer(struct ccnd_handle *h)
 {
     ccnd_msg(h,"process_internal_client_buffer START");
     struct face *face = h->face0;
-    if (face == NULL)
+    if (face == NULL){
+        ccnd_msg(h,"face0 NULL!!");
         return;
+    }
     face->inbuf = ccn_grab_buffered_output(h->internal_client);
-    if (face->inbuf == NULL)
+    if (face->inbuf == NULL){
+        ccnd_msg(h,"buffer NULL!!");
         return;
+    }
     ccnd_meter_bump(h, face->meter[FM_BYTI], face->inbuf->length);
     process_input_buffer(h, face);
     ccn_charbuf_destroy(&(face->inbuf));
