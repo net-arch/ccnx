@@ -589,7 +589,6 @@ r_init_create(const char *progname, ccnr_logger logger, void *loggerdata)
                         &ccnr_answer_req, OP_SERVICE);
         bufsize = r_init_confval(h, "CCNR_MIN_SEND_BUFSIZE", 1, 2097152, 16384);
         establish_min_send_bufsize(h, fd, bufsize);
-        ccnr_msg(ccnr,"OOOOOOO");
     }
     else
         ccn_disconnect(h->direct_client); // Apparently ccn_connect error case needs work.
