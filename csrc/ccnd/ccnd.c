@@ -5543,9 +5543,6 @@ process_incoming_content(struct ccnd_handle *h, struct face *face,
         res = 1;
     }
 Bail:
-    indexbuf_release(h, comps);
-    charbuf_release(h, f);
-    f = NULL;
     if (res < 0) {
         indexbuf_release(h, comps);
         ccnd_debug_ccnb(h, -res, "content_dropped", face, msg, size);
@@ -5571,8 +5568,7 @@ Bail:
         if (content == NULL){
 	    ccnd_msg(h,"content null");
 	    abort();
-	    }
-
+	}
         if (strstr(f->buf, "GUARANTEE") != NULL) {
           content->flags = CCN_CQ_GUARANTEE;  
           content->control = GUARANTEE;//add by xu

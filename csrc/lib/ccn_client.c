@@ -402,8 +402,10 @@ ccn_connect(struct ccn *h, const char *name)
     }
 #endif
     h->sock = socket(sockaddr.ss_family, SOCK_STREAM, 0);
-    if (h->sock == -1)
+    if (h->sock == -1){
+	printf("create socket failed...\n");
         return(NOTE_ERRNO(h));
+    }
     switch (sockaddr.ss_family) {
         case AF_UNIX: addr_size = sizeof(*un_addr); break;
         case AF_INET: addr_size = sizeof(*in_addr); break;
@@ -411,11 +413,15 @@ ccn_connect(struct ccn *h, const char *name)
         default: addr_size = 0;
     }
     res = connect(h->sock, addr, addr_size);
-    if (res == -1)
+    if (res == -1){
+	printf("connect socket failed...\n");
         return(NOTE_ERRNO(h));
+    }
     res = fcntl(h->sock, F_SETFL, O_NONBLOCK);
-    if (res == -1)
+    if (res == -1){
+	printf("set nonblock failed...\n");
         return(NOTE_ERRNO(h));
+    }
     return(h->sock);
 }
 
@@ -1139,8 +1145,8 @@ ccn_put(struct ccn *h, const void *p, size_t length)
     }
     if (h->sock == -1)
         res = 0;
-    else
-        res = write(h->sock, p, length);
+    else{
+        res = write(h->sock, p, length);}
     if (res == length)
         return(0);
     if (res == -1) {
@@ -1792,8 +1798,8 @@ ccn_dispatch_message(struct ccn *h, unsigned char *msg, size_t size)
                                                                  &info);
                                     if (interest->magic != 0x7059e5f4)
                                         ccn_gripe(interest);
-                                    if (ures == CCN_UPCALL_RESULT_REEXPRESS)
-                                        ccn_refresh_interest(h, interest);
+                                    if (ures == CCN_UPCALL_RESULT_REEXPRESS){
+                                        ccn_refresh_interest(h, interest);}
                                     else if ((ures == CCN_UPCALL_RESULT_VERIFY ||
                                               ures == CCN_UPCALL_RESULT_FETCHKEY) &&
                                              (upcall_kind == CCN_UPCALL_CONTENT_UNVERIFIED ||
@@ -1950,8 +1956,8 @@ ccn_age_interest(struct ccn *h,
             }
             ccn_indexbuf_release(h, info.interest_comps);
         }
-        if (ures == CCN_UPCALL_RESULT_REEXPRESS)
-            ccn_refresh_interest(h, interest);
+        if (ures == CCN_UPCALL_RESULT_REEXPRESS){
+            ccn_refresh_interest(h, interest);}
         else
             interest->target = 0;
     }
