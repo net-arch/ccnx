@@ -95,9 +95,9 @@ bandwidth_calculation(struct ccnd_handle *h){
 	    time_last_1sec = tv;
 
 	    for (j = 0; j < h->face_limit ; j++){
-	        if (h->faces_by_faceid[i] == NULL)
+	        if (h->faces_by_faceid[j] == NULL)
 	            continue;
-	        f = h->faces_by_faceid[i];
+	        f = h->faces_by_faceid[j];
 	        //bandwidth_g : gListによって更新
 	        f->bandwidth_g = 0;
 	        //bandwidth_f : 固定値

@@ -499,7 +499,6 @@ content_queue_destroy(struct ccnd_handle *h, struct content_queue **pq)
             ccn_schedule_cancel(h->sched, q->sender);
             q->sender = NULL;
         }
-        
         free(q);
         *pq = NULL;
     }
