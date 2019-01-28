@@ -1613,8 +1613,14 @@ record_connection(struct ccnd_handle *h, int fd,
 	/*add by Fumiya*/
 	face->amount_size_of_guarantee = 0;
 	face->send_size_of_guarantee = 0;
-	face->number_of_default_queue = 10;
+	face->number_of_default_queue = 0;
 	face->number_of_guarantee_queue = 0;
+
+	face->bandwidth_g = 0;
+	face->bandwidth_f = 10000000;
+	face->send_g_amount = 0;
+	face->send_d_amount = 0;
+	face->sending_status = 1;
 	/*add by Fumiya*/
         addrspace = ((unsigned char *)e->key) + e->keysize;
         face->addr = (struct sockaddr *)addrspace;
