@@ -2322,7 +2322,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         q->sender = ccn_schedule_event(h->sched, delay,
                                        content_sender_qos, q, face->faceid);
     }
-    ccnd_msg(,"face_send_queue_insert_qos OK");
+    ccnd_msg(h,"face_send_queue_insert_qos OK");
     return (ans);
 }
 //add by Fumiya End
