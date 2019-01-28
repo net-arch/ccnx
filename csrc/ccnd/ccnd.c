@@ -499,8 +499,7 @@ content_queue_destroy(struct ccnd_handle *h, struct content_queue **pq)
             ccn_schedule_cancel(h->sched, q->sender);
             q->sender = NULL;
         }
-
-	ccn_charbuf_destroy(&q->content_name);
+        
         free(q);
         *pq = NULL;
     }
