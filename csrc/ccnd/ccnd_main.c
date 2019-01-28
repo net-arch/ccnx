@@ -98,6 +98,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
+	        ccnd_msg(h,"%s",f->gList[0]->content_name->buf);
 	        //bandwidth_g : gListによって更新
 	        f->bandwidth_g = 0;
 	        //bandwidth_f : 固定値

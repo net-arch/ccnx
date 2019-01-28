@@ -413,20 +413,18 @@ choose_face_delay(struct ccnd_handle *h, struct face *face, enum cq_delay_class 
     return(1);
 }
 
-static struct g_content_name *
-gListItemCreate(struct ccnd_handle *h)
+static struct g_content_name * gListItemCreate(struct ccnd_handle *h)
 {
     struct g_content_name *n;
     n = calloc(1, sizeof(*n));
     if (n!=NULL){
     n->content_name = ccn_charbuf_create();
     n->sending_status = 0;
-
     if(n->content_name == NULL){
         free(n);
-        return NULL;
+        return(NULL);
     }}
-    return n;
+    return(n);
 }
 
 /**
@@ -2275,9 +2273,9 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     }
     if (content->control == GUARANTEE) {
         for(i=0;i<100;i++){
-            if (strcmp(face->gList[i]->content_name->buf,flatname->buf) == 0){
-                //過去にこのコンテンツの要求を受けたことがある
-            }
+//            if (strcmp(face->gList[i]->content_name->buf,flatname->buf) == 0){
+//                //過去にこのコンテンツの要求を受けたことがある
+//            }
             if (face->gList[i] == NULL) {
                 //初めてこのコンテンツを要求される
                 //name listに追加する
