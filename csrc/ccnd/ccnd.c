@@ -2274,7 +2274,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (face->g_queue == NULL) {
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queue = content_queue_create(h, face, c);
-        ccnd_msg(,"q_queue create OK");
+        ccnd_msg(h,"q_queue create OK");
     }
     if (face->d_queue == NULL) {
         c = choose_content_delay_class(h, face->faceid, content->flags);
