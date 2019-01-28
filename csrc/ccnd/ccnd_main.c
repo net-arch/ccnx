@@ -52,7 +52,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 	int k = 0;
 
     int i;
-    int j;
+    unsigned j;
 //    int n;
     struct face *f;
 //    struct content_queue *q;
