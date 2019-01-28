@@ -68,67 +68,24 @@ bandwidth_calculation(struct ccnd_handle *h){
             if (h->faces_by_faceid[i] == NULL)
                 continue;
             f = h->faces_by_faceid[i];
-
-//            for (j = 0;  j<QOS_QUEUE ; j++) {
-//                if (f->qos_q[j] == NULL)
-//                    break;
-//                else{
-//                    q = f->qos_q[j];
-//                    if (q->use_flag == 2 && time_diff(q->last_use,tv) >= 0.3 && q->sender == NULL) {
-//                        if (q->queue_type == CQ_DEFAULT)
-//                            f->number_of_default_queue--;
-//                        else
-//                            f->number_of_guarantee_queue--;
-//			q->use_flag = 0;
-//                    }
-//		    if (q->use_flag == 1 && q->sender == NULL && time_diff(q->last_use,tv) >= 0.3) {
-//                        q->use_flag = 2;
-//                        struct timeval last;
-//                        gettimeofday(&last,NULL);
-//                        q->last_use = last;
-//                    }
-//                }
-//            }
         }
 	//最終更新時間から1秒が経過していた時
 	if((tv.tv_sec - time_last_1sec.tv_sec) >= 1){
 	    time_last_1sec = tv;
 
 	    for (i = 0; i < h->face_limit ; i++){
-//	        bw_amount = 0;
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
-//		    bw_of_g = 3000000.0 * (double)f->number_of_guarantee_queue * (double)(f->amount_size_of_guarantee - f->send_size_of_guarantee) / (4000.0 * 94.0);
-//		    if(bw_of_g > 3000000.0 * (double)f->number_of_guarantee_queue){
-//		        bw_of_g = 3000000.0 * (double)f->number_of_guarantee_queue;
-//		    }
-//		    for (j = 0;  j<QOS_QUEUE ; j++) {
-//		        if (f->qos_q[j] == NULL)
-//		            break;
-//		        else{
-//		            q = f->qos_q[j];
-//			        if (q->use_flag == 0)
-//			            continue;
-//			        if ((f->number_of_default_queue + f->number_of_guarantee_queue) > 0){
-//			            if (q->queue_type == CQ_DEFAULT) {
-//			                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue);
-//					q->bandwidth = 1000000000;
-//			            }else{
-//			                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue) + (int)bw_of_g / f->number_of_guarantee_queue;
-//			                bw_amount += q->bandwidth;
-//					q->bandwidth = 1000000000;
-//			            }
-//			        }
-//			        else
-//			            q->bandwidth = q->bandwidth_of_face;
-//			        q->remaining_bandwidth = q->bandwidth;
-//			        q->bw_flag = 0;
-//                    }
-//		    }
-//		    if(bw_amount > 0){
-//		        ccnd_msg(h,"#CANUSE#:%d #FACE#:%d #SENDAMOUNT#:%d",bw_amount,f->faceid,f->send_size_of_guarantee);
-//		    }
+            //bandwidth_g : gListによって更新
+	        f->bandwidth_g = 0;
+	        //bandwidth_f : 固定値
+	        //send_g_amount : 0
+	        f->send_g_amount = 0;
+	        //send_d_amount : 0
+	        f->send_d_amount = 0;
+	        //sending_status : 0;
+	        f->sending_status = 0;
 	    }
 	}
     }

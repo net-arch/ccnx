@@ -2165,25 +2165,34 @@ content_sender_qos(struct ccn_schedule *sched,
     if (burst_max == 0)
         q->nrun = 0;
     for (i = 0; i < burst_max && nsec < 1000000; i++) {
-//        if (q->bw_flag == 1){
-//            break;
-//        }
         content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
         if (content == NULL)
             q->nrun = 0;
         else {
-//            if (q->remaining_bandwidth - content->size * 8 < 0){
-//                q->bw_flag = 1;
-//                break;
-//            }
-//            q->remaining_bandwidth -= content->size * 8;
-//	    if(content->control == GUARANTEE){
-//                face->send_size_of_guarantee += content->size;
-//            }
-            send_content(h, face, content);
-//	    struct timeval last;
-//    	    gettimeofday(&last,NULL);
-//    	    q->last_use = last;
+            if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
+                break;
+            }
+            if (face->bandwidth_g == 0) {
+                face->sending_status = 1;
+            }
+            if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g) {
+                face->sending_status = 1;
+            }
+
+            if (face->sending_status == 0) {
+                if (content->control == GUARANTEE) {
+                    send_content(h, face, content);
+                    face->send_g_amount += content->size * 8;
+                }
+            }else if (face->sending_status == 1){
+                if(content->control == GUARANTEE){
+                    send_content(h, face, content);
+                    face->send_g_amount += content->size * 8;
+                }else{
+                    send_content(h, face, content);
+                    face->send_d_amount += content->size * 8;
+                }
+            }
             content->refs--;
             /* face may have vanished, bail out if it did */
             if (face_from_faceid(h, faceid) == NULL)
