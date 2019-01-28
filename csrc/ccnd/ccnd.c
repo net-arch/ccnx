@@ -418,13 +418,14 @@ gListItemCreate(struct ccnd_handle *h)
 {
     struct g_content_name *n;
     n = calloc(1, sizeof(*n));
+    if (n!=NULL){
     n->content_name = ccn_charbuf_create();
     n->sending_status = 0;
 
     if(n->content_name == NULL){
         free(n);
         return NULL;
-    }
+    }}
     return n;
 }
 
@@ -446,16 +447,6 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
         q->nrun = 0;
         q->send_queue = ccn_indexbuf_create();
         q->control_queue = ccn_indexbuf_create();
-	//add by Fumiya
-//	q->content_name = ccn_charbuf_create();
-//	q->bandwidth = 10000000;
-//        q->remaining_bandwidth = q->bandwidth;
-//        struct timeval create;
-//        gettimeofday(&create,NULL);
-//        q->last_use = create;
-//	q->bw_flag = 0;
-//	q->use_flag = 1;
-	//add by Fumiya End
 	if (q->send_queue == NULL) {
             free(q);
             return(NULL);
@@ -744,6 +735,8 @@ finalize_face(struct hashtb_enumerator *e)
         }
         for (c = 0; c < CCN_CQ_N; c++)
             content_queue_destroy(h, &(face->q[c]));
+        content_queue_destroy(h, &face->g_queue);
+        content_queue_destroy(h, &face->d_queue);
         ccn_charbuf_destroy(&face->inbuf);
         ccn_charbuf_destroy(&face->outbuf);
         ccnd_msg(h, "%s face id %u (slot %u)",
@@ -5972,6 +5965,7 @@ process_input(struct ccnd_handle *h, int fd)
 static void
 process_internal_client_buffer(struct ccnd_handle *h)
 {
+    ccnd_msg(h,"process_internal_client_buffer START");
     struct face *face = h->face0;
     if (face == NULL)
         return;
@@ -5981,6 +5975,7 @@ process_internal_client_buffer(struct ccnd_handle *h)
     ccnd_meter_bump(h, face->meter[FM_BYTI], face->inbuf->length);
     process_input_buffer(h, face);
     ccn_charbuf_destroy(&(face->inbuf));
+    ccnd_msg(h,"process_internal_client_buffer END:");
 }
 
 /**
@@ -6984,10 +6979,15 @@ ccnd_destroy(struct ccnd_handle **pccnd)
         int i;
         ccn_charbuf_destroy(&h->face0->inbuf);
         ccn_charbuf_destroy(&h->face0->outbuf);
+        content_queue_destroy(h, &f->face0->g_queue);
+        content_queue_destroy(h, &f->face0->d_queue);
         for (i = 0; i < CCN_CQ_N; i++)
             content_queue_destroy(h, &(h->face0->q[i]));
         for (i = 0; i < CCND_FACE_METER_N; i++)
             ccnd_meter_destroy(&h->face0->meter[i]);
+        for (i=0; i<100;i++ ) {
+            ccn_charbuf_destroy(&h->face0->gList[i]->content_name);
+        }
         free(h->face0);
         h->face0 = NULL;
     }
