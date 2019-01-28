@@ -2276,14 +2276,14 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 //            if (strcmp(face->gList[i]->content_name->buf,flatname->buf) == 0){
 //                //過去にこのコンテンツの要求を受けたことがある
 //            }
-            if (face->gList[i] == NULL) {
-                //初めてこのコンテンツを要求される
-                //name listに追加する
-                face->gList[i] = gListItemCreate(h);
-                ccn_charbuf_append_charbuf(face->gList[i]->content_name, flatname);
-                ccnd_msg(h,"%s",flatname);
-//                face->gList[i]->sending_status = 1;
-            }
+//            if (face->gList[i] == NULL) {
+//                //初めてこのコンテンツを要求される
+//                //name listに追加する
+//                face->gList[i] = gListItemCreate(h);
+//                ccn_charbuf_append_charbuf(face->gList[i]->content_name, flatname);
+//                ccnd_msg(h,"%s",flatname);
+////                face->gList[i]->sending_status = 1;
+//            }
         }
         q = face->g_queue;
     }else{
