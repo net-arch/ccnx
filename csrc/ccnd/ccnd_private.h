@@ -335,8 +335,7 @@ struct face {
     int number_of_default_queue;
     int number_of_guarantee_queue;
     struct content_queue *qos_q[QOS_QUEUE];
-
-    int amount_size_of_guarantee;
+    
     struct content_queue *g_queue;
     struct content_queue *d_queue;
     struct g_content_name *gList[100];
