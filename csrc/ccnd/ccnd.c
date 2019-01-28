@@ -2181,6 +2181,12 @@ content_sender_qos(struct ccn_schedule *sched,
             if (face->send_g_amount + face->send_d_amount + content->size * 8 > face->bandwidth_f) {
                 break;
             }
+            if (face->bandwidth_g == 0) {
+                face->sending_status = 1
+            }
+            if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g) {
+                face->sending_status = 1
+            }
             if (face->sending_status == 0) {
                 if (content->control == GUARANTEE) {
                     send_content(h, face, content);

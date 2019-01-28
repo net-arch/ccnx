@@ -99,7 +99,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 	            continue;
 	        f = h->faces_by_faceid[i];
 	        //bandwidth_g : gListによって更新
-	        f->bandwidth_g = 3000000;
+	        f->bandwidth_g = 0;
 	        //bandwidth_f : 固定値
 	        //send_g_amount : 0
 	        f->send_g_amount = 0;
