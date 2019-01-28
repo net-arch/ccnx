@@ -1613,12 +1613,12 @@ record_connection(struct ccnd_handle *h, int fd,
         face->sendface = CCN_NOFACEID;
         face->addrlen = e->extsize;
 	    /*add by Fumiya*/
-        face->amount_size_of_guarantee = 0;
-        face->bandwidth_g = 0;
-        face->bandwidth_f = 10000000;
-        face->send_g_amount = 0;
-        face->send_d_amount = 0;
-        face->sending_status = 0;
+//        face->amount_size_of_guarantee = 0;
+//        face->bandwidth_g = 0;
+//        face->bandwidth_f = 10000000;
+//        face->send_g_amount = 0;
+//        face->send_d_amount = 0;
+//        face->sending_status = 0;
 	    /*add by Fumiya*/
         addrspace = ((unsigned char *)e->key) + e->keysize;
         face->addr = (struct sockaddr *)addrspace;
@@ -2302,7 +2302,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     n = q->send_queue->n;
     if(content->control == GUARANTEE){
-        face->amount_size_of_guarantee += content->size;
+//        face->amount_size_of_guarantee += content->size;
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
     }else
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
@@ -2362,7 +2362,7 @@ face_send_queue_insert(struct ccnd_handle *h,
     n = q->send_queue->n;
     if(content->control == GUARANTEE){
 	/*add by Fumiya*/
-        face->amount_size_of_guarantee += content->size;
+//        face->amount_size_of_guarantee += content->size;
 	ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
 	/*add by Fumiya*/
     }else
