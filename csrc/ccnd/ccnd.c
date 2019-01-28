@@ -2298,6 +2298,10 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     }else{
         q = face->d_queue;
     }
+    if (q == NULL) {
+        ccnd_msg(h,"failed get queue");
+        return -1;
+    }
     ccn_charbuf_destroy(&flatname);
 
 
@@ -6261,7 +6265,7 @@ ccnd_run(struct ccnd_handle *h)
             timeout_ms = 1;
         process_internal_client_buffer(h);
         prepare_poll_fds(h);
-        if (0) ccnd_msg(h, "at ccnd.c:%d poll(h->fds, %d, %d)", __LINE__, h->nfds, timeout_ms);
+        if (1) ccnd_msg(h, "at ccnd.c:%d poll(h->fds, %d, %d)", __LINE__, h->nfds, timeout_ms);
         res = poll(h->fds, h->nfds, timeout_ms);
         prev_timeout_ms = ((res == 0) ? timeout_ms : 1);
         if (-1 == res) {
