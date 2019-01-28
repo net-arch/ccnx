@@ -51,8 +51,8 @@ bandwidth_calculation(struct ccnd_handle *h){
 	struct timeval time_last_1sec={0}; //一秒集計用のtimeval
 	int k = 0;
 
-    int i;
-    unsigned j;
+    int j;
+    unsigned i;
 //    int n;
     struct face *f;
 //    struct content_queue *q;
