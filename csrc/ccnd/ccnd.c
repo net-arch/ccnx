@@ -413,6 +413,21 @@ choose_face_delay(struct ccnd_handle *h, struct face *face, enum cq_delay_class 
     return(1);
 }
 
+static struct g_content_name *
+gListItemCreate(struct ccnd_handle *h)
+{
+    struct g_content_name *n;
+    n = calloc(1, sizeof(*n));
+    n->content_name = ccn_charbuf_create();
+    n->sending_status = 0;
+
+    if(n->content_name == NULL){
+        free(n);
+        return NULL;
+    }
+    return n;
+}
+
 /**
  * Create a queue for sending content.
  */
@@ -432,14 +447,14 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
         q->send_queue = ccn_indexbuf_create();
         q->control_queue = ccn_indexbuf_create();
 	//add by Fumiya
-	q->content_name = ccn_charbuf_create();
-	q->bandwidth = 10000000;
-        q->remaining_bandwidth = q->bandwidth;
-        struct timeval create;
-        gettimeofday(&create,NULL);
-        q->last_use = create;
-	q->bw_flag = 0;
-	q->use_flag = 1;
+//	q->content_name = ccn_charbuf_create();
+//	q->bandwidth = 10000000;
+//        q->remaining_bandwidth = q->bandwidth;
+//        struct timeval create;
+//        gettimeofday(&create,NULL);
+//        q->last_use = create;
+//	q->bw_flag = 0;
+//	q->use_flag = 1;
 	//add by Fumiya End
 	if (q->send_queue == NULL) {
             free(q);
@@ -735,8 +750,6 @@ finalize_face(struct hashtb_enumerator *e)
         }
         for (c = 0; c < CCN_CQ_N; c++)
             content_queue_destroy(h, &(face->q[c]));
-        for (c = 0; c < QOS_QUEUE; c++)
-            content_queue_destroy(h, &(face->qos_q[c]));
         ccn_charbuf_destroy(&face->inbuf);
         ccn_charbuf_destroy(&face->outbuf);
         ccnd_msg(h, "%s face id %u (slot %u)",
@@ -753,6 +766,10 @@ finalize_face(struct hashtb_enumerator *e)
     }
     for (m = 0; m < CCND_FACE_METER_N; m++)
         ccnd_meter_destroy(&face->meter[m]);
+
+    for (m = 0; m < 100 ;m++ ){
+        ccn_charbuf_destroy(&face->gList[m]);
+    }
 }
 
 static int
@@ -1610,12 +1627,14 @@ record_connection(struct ccnd_handle *h, int fd,
         face->recv_fd = fd;
         face->sendface = CCN_NOFACEID;
         face->addrlen = e->extsize;
-	/*add by Fumiya*/
-	face->amount_size_of_guarantee = 0;
-	face->send_size_of_guarantee = 0;
-	face->number_of_default_queue = 10;
-	face->number_of_guarantee_queue = 0;
-	/*add by Fumiya*/
+	    /*add by Fumiya*/
+        face->amount_size_of_guarantee = 0;
+        face->bandwidth_g = 0;
+        face->bandwidth_f = 10000000;
+        face->send_g_amount = 0;
+        face->send_d_amount = 0;
+        face->sending_status = 0;
+	    /*add by Fumiya*/
         addrspace = ((unsigned char *)e->key) + e->keysize;
         face->addr = (struct sockaddr *)addrspace;
         memcpy(addrspace, who, e->extsize);
@@ -2159,25 +2178,28 @@ content_sender_qos(struct ccn_schedule *sched,
     if (burst_max == 0)
         q->nrun = 0;
     for (i = 0; i < burst_max && nsec < 1000000; i++) {
-        if (q->bw_flag == 1){
-            break;
-        }
         content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
         if (content == NULL)
             q->nrun = 0;
         else {
-            if (q->remaining_bandwidth - content->size * 8 < 0){
-                q->bw_flag = 1;
+            if (face->send_g_amount + face->send_d_amount + content->size * 8 > face->bandwidth_f) {
                 break;
             }
-            q->remaining_bandwidth -= content->size * 8;
-	    if(content->control == GUARANTEE){
-                face->send_size_of_guarantee += content->size;
+            if (face->sending_status == 0) {
+                if (content->control == GUARANTEE) {
+                    send_content(h, face, content);
+                    face->send_g_amount += content->size * 8;
+                }
+            }else if (face->sending_status == 1){
+                if(content->control == GUARANTEE){
+                    send_content(h, face, content);
+                    face->send_g_amount += content->size * 8;
+                }else{
+                    send_content(h, face, content);
+                    face->send_d_amount += content->size * 8;
+                }
             }
-            send_content(h, face, content);
-	    struct timeval last;
-    	    gettimeofday(&last,NULL);
-    	    q->last_use = last;
+
             content->refs--;
             /* face may have vanished, bail out if it did */
             if (face_from_faceid(h, faceid) == NULL)
@@ -2225,7 +2247,6 @@ content_sender_qos(struct ccn_schedule *sched,
             return(delay);
         }
     }
-    //以下は全てのコンテンツを送信し終えた時の場合, 今回の場合, その状況は稀であると考えられるのでこうするわけにはいかない.
     q->send_queue->n = q->ready = 0;
     q->control_queue->n = q->ready = 0;
     Bail:
@@ -2248,43 +2269,35 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     struct content_queue *q;
     enum cq_delay_class c;
 
-    for(i = 0;i<QOS_QUEUE;i++){
-        if (face->qos_q[i] == NULL) {
-            c = choose_content_delay_class(h, face->faceid, content->flags);
-            if (content->control == GUARANTEE) {
-                face->number_of_guarantee_queue++;
-		face->qos_q[i] = content_queue_create(h, face, c);
-                ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
-                q = face->qos_q[i];
-		q->queue_type = CQ_GUARANTEE;
-		q->bandwidth_of_face = 10000000;
-            } else {
-                face->number_of_default_queue++;
-		face->qos_q[i] = content_queue_create(h, face, c);
-                ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
-                q = face->qos_q[i];
-                q->queue_type = CQ_DEFAULT;
-		q->bandwidth_of_face = 10000000;
-            }
-            break;
-        }
-        if (strcmp(face->qos_q[i]->content_name->buf,flatname->buf) == 0){
-            q = face->qos_q[i];
-	    if(q->use_flag == 0){
-	    	if(q->queue_type == CQ_GUARANTEE){
-			face->number_of_guarantee_queue++;
-		}else{
-			face->number_of_default_queue++;
-		}
-	    }
-	    q->use_flag = 1;
-            break;
-        }
+    //キューがなかった場合作成
+    if (face->g_queue == NULL) {
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->g_queue = content_queue_create(h, face, c);
     }
-    if (q == NULL) {
-        return -1;
+    if (face->d_queue == NULL) {
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->d_queue = content_queue_create(h, face, c);
+    }
+    if (content->control == GUARANTEE) {
+        for(i=0;i<100;i++){
+            if (strcmp(face->gList[i]->content_name->buf,flatname->buf) == 0){
+                //過去にこのコンテンツの要求を受けたことがある
+            }
+            if (face->gList[i] == NULL) {
+                //初めてこのコンテンツを要求される
+                //name listに追加する
+                face->gList[i] = gListItemCreate(h);
+                ccn_charbuf_append_charbuf(face->gList[i]->content_name, flatname);
+                ccnd_msg(h,"%s",flatname);
+                face->gList[i]->sending_status++;
+            }
+        }
+        q = face->g_queue;
+    }else{
+        q = face->d_queue;
     }
     ccn_charbuf_destroy(&flatname);
+
 
     int ans;
     int n;
