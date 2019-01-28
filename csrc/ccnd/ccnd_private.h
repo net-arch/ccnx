@@ -254,17 +254,11 @@ struct content_queue {
     struct ccn_indexbuf *send_queue; /**< accession numbers of pending content */
     struct ccn_indexbuf *control_queue; /**< for mark which type this content is. add by xu */
     struct ccn_scheduled_event *sender;
+};
 
-    //add by Fumiya
+struct g_content_name {
     struct ccn_charbuf *content_name;
-    enum queue_class queue_type;
-    int bandwidth_of_face;
-    int bandwidth;
-    int remaining_bandwidth;
-    struct timeval last_use;
-    int bw_flag;
-    int use_flag;
-    //add by Fumiya End
+    int sending_status;
 };
 
 enum cq_delay_class {
@@ -325,11 +319,14 @@ struct face {
 
     /*add by Fumiya for adaptive bandwidth control*/
     int amount_size_of_guarantee;
-    int send_size_of_guarantee;
-    int bandwidth_of_face;
-    int number_of_default_queue;
-    int number_of_guarantee_queue;
-    struct content_queue *qos_q[QOS_QUEUE];
+    struct content_queue *g_queue;
+    struct content_queue *d_queue;
+    struct g_content_name *gList[100];
+    int bandwidth_g;
+    int bandwidth_f;
+    int send_g_amount;
+    int send_d_amount;
+    int sending_status;
     /*add by Fumiya for adaptive bandwidth control*/
 };
 
