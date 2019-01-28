@@ -2259,31 +2259,31 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
             c = choose_content_delay_class(h, face->faceid, content->flags);
             if (content->control == GUARANTEE) {
                 face->number_of_guarantee_queue++;
-		face->qos_q[i] = content_queue_create(h, face, c);
+		        face->qos_q[i] = content_queue_create(h, face, c);
                 ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
                 q = face->qos_q[i];
-		q->queue_type = CQ_GUARANTEE;
-		q->bandwidth_of_face = 10000000;
+		        q->queue_type = CQ_GUARANTEE;
+		        q->bandwidth_of_face = 10000000;
             } else {
                 face->number_of_default_queue++;
-		face->qos_q[i] = content_queue_create(h, face, c);
+		        face->qos_q[i] = content_queue_create(h, face, c);
                 ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
                 q = face->qos_q[i];
                 q->queue_type = CQ_DEFAULT;
-		q->bandwidth_of_face = 10000000;
+		        q->bandwidth_of_face = 10000000;
             }
             break;
         }
         if (strcmp(face->qos_q[i]->content_name->buf,flatname->buf) == 0){
             q = face->qos_q[i];
-	    if(q->use_flag == 0){
-	    	if(q->queue_type == CQ_GUARANTEE){
-			face->number_of_guarantee_queue++;
-		}else{
-			face->number_of_default_queue++;
-		}
-	    }
-	    q->use_flag = 1;
+	        if(q->use_flag == 0){
+	    	    if(q->queue_type == CQ_GUARANTEE){
+			        face->number_of_guarantee_queue++;
+		        }else{
+			        face->number_of_default_queue++;
+		        }
+	        }
+	        q->use_flag = 1;
             break;
         }
     }
@@ -2388,6 +2388,7 @@ is_pending_on(struct ccnd_handle *h, struct interest_entry *ie, unsigned faceid)
     struct pit_face_item *x;
     
     for (x = ie->strategy.pfl; x != NULL; x = x->next) {
+        if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
             return(1);
         // XXX - depending on how list is ordered, an early out might be possible
         // For now, we assume no particular ordering
@@ -2437,11 +2438,10 @@ consume_matching_interests(struct ccnd_handle *h,
                 strategy_callout(h, p, CCNST_SATISFIED, content_face->faceid);
             for (x = p->strategy.pfl; x != NULL; x = x->next) {
                 if ((x->pfi_flags & CCND_PFI_PENDING) != 0) {
-		    face_send_queue_insert_qos(h, face_from_faceid(h, x->faceid),content);
-                    //face_send_queue_insert(h, face_from_faceid(h, x->faceid),content);
-		}
+		            face_send_queue_insert_qos(h, face_from_faceid(h, x->faceid),content);
+		        }
             }
-	    matches += 1;
+	        matches += 1;
             consume_interest(h, p);
         }
     }
