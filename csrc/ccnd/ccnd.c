@@ -2284,7 +2284,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
                 face->gList[i] = gListItemCreate(h);
                 ccn_charbuf_append_charbuf(face->gList[i]->content_name, flatname);
                 ccnd_msg(h,"%s",flatname);
-                face->gList[i]->sending_status++;
+//                face->gList[i]->sending_status = 1;
             }
         }
         q = face->g_queue;
@@ -6775,12 +6775,6 @@ ccnd_create(const char *progname, ccnd_logger logger, void *loggerdata)
     h->ticktock.gettime = &ccnd_gettime;
     h->ticktock.data = h;
     h->sched = ccn_schedule_create(h, &h->ticktock);
-
-    //add by Fumiya
-    struct ccn_timeval start;
-    h->ticktock.gettime(&h->ticktock,&start);
-    h->last_update_qos = start;
-    //add by Fumiya End
 
     h->starttime = h->sec;
     h->starttime_usec = h->usec;
