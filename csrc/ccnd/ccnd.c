@@ -6979,8 +6979,8 @@ ccnd_destroy(struct ccnd_handle **pccnd)
         int i;
         ccn_charbuf_destroy(&h->face0->inbuf);
         ccn_charbuf_destroy(&h->face0->outbuf);
-        content_queue_destroy(h, &f->face0->g_queue);
-        content_queue_destroy(h, &f->face0->d_queue);
+        content_queue_destroy(h, &h->face0->g_queue);
+        content_queue_destroy(h, &h->face0->d_queue);
         for (i = 0; i < CCN_CQ_N; i++)
             content_queue_destroy(h, &(h->face0->q[i]));
         for (i = 0; i < CCND_FACE_METER_N; i++)
