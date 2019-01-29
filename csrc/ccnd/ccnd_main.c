@@ -113,9 +113,12 @@ bandwidth_calculation(struct ccnd_handle *h){
 			        if ((f->number_of_default_queue + f->number_of_guarantee_queue) > 0){
 			            if (q->queue_type == CQ_DEFAULT) {
 			                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue);
+					ccnd_msg(h,"default bandwidth %d",q->bandwidth);
+					q->bandwidth = 1000000000;
 			            }else{
 			                q->bandwidth = (q->bandwidth_of_face - (int)bw_of_g) / (f->number_of_default_queue + f->number_of_guarantee_queue) + (int)bw_of_g / f->number_of_guarantee_queue;
 			                bw_amount += q->bandwidth;
+					q->bandwidth = 1000000000;
 			            }
 			        }
 			        else
