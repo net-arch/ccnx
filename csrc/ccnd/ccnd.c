@@ -2295,6 +2295,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     ccn_flatname_append_from_ccnb(flatname,content->ccnb,content->size,0,2);
 
     int i;
+    int system_flag = 0;
     struct content_queue *q;
     struct g_content_name *name;
     enum cq_delay_class c;
@@ -2307,6 +2308,10 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (face->d_queue == NULL && content->control == DEFAULT){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->d_queue = content_queue_create(h, face, c);
+    }
+    if (face->system_queue == NULL){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->system_queue = content_queue_create(h, face, c);
     }
     //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
@@ -2326,7 +2331,11 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         }
         q = face->g_queue;
     }else{
-        q = face->d_queue;
+        if(strstr(flatname->buf,"DEFAULT")!=NULL){
+            q = face->d_queue;
+        }
+        q = face->system_queue;
+        system_flag = 1;
     }
     if (q == NULL) {
         return -1;
@@ -2350,8 +2359,13 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         //そのフラグと一つのキューに与えられる帯域幅, remaining bandwidthの更新はmain loopの中に更新の関数を入れてやる
         q->ready = q->send_queue->n;
         delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
-        q->sender = ccn_schedule_event(h->sched, delay,
-                                       content_sender_qos, q, face->faceid);
+        if (system_flag == 1){
+            q->sender = ccn_schedule_event(h->sched, delay,
+                                           content_sender, q, face->faceid);
+        }else{
+            q->sender = ccn_schedule_event(h->sched, delay,
+                                           content_sender_qos, q, face->faceid);
+        }
     }
     return (ans);
 }
