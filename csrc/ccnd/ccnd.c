@@ -2188,6 +2188,7 @@ content_sender_qos(struct ccn_schedule *sched,
         else {
             //g,dの送信したコンテンツのサイズが帯域幅を超えていたら更新されるまで転送できない
             if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
+                q->nrun = 0;
                 break;
             }
             //全体の帯域幅の限界は迎えていない&&gの帯域幅が設定されていないときはgがないということなので通常モード
@@ -2204,24 +2205,34 @@ content_sender_qos(struct ccn_schedule *sched,
                 if (content->control == GUARANTEE) {
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
-                }else{
-                    break;
+                    content->refs--;
+                    /* face may have vanished, bail out if it did */
+                    if (face_from_faceid(h, faceid) == NULL)
+                        goto Bail;
+                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                    q->nrun++;
                 }
             }else if (face->sending_status == 1){
                 if(content->control == GUARANTEE){
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
+                    content->refs--;
+                    /* face may have vanished, bail out if it did */
+                    if (face_from_faceid(h, faceid) == NULL)
+                        goto Bail;
+                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                    q->nrun++;
                 }else{
                     send_content(h, face, content);
                     face->send_d_amount += content->size * 8;
+                    content->refs--;
+                    /* face may have vanished, bail out if it did */
+                    if (face_from_faceid(h, faceid) == NULL)
+                        goto Bail;
+                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                    q->nrun++;
                 }
             }
-            content->refs--;
-            /* face may have vanished, bail out if it did */
-            if (face_from_faceid(h, faceid) == NULL)
-                goto Bail;
-            nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
-            q->nrun++;
         }
     }
     if (q->ready < i) abort();
