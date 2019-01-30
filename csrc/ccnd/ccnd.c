@@ -2401,7 +2401,7 @@ is_pending_on(struct ccnd_handle *h, struct interest_entry *ie, unsigned faceid)
     struct pit_face_item *x;
     
     for (x = ie->strategy.pfl; x != NULL; x = x->next) {
-//        if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
+       if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
             return(1);
         // XXX - depending on how list is ordered, an early out might be possible
         // For now, we assume no particular ordering
