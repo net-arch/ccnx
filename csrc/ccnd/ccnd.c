@@ -2302,6 +2302,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
             if (face->content_names[i] == NULL){
                 face->content_names[i] == s;
                 ccnd_msg(h,"add content name");
+                break;
             }
             if (strcmp(face->content_names[i],s) == 0){
                 break;
@@ -2311,7 +2312,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     }else{
         q = face->d_queue;
     }
-    //TODO:名前リスト増減の条件を決める (入ってきたときに1にして1秒おきに0にしよう)
     if (q == NULL) {
         return -1;
     }
