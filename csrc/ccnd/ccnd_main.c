@@ -72,14 +72,16 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
+	        int counter = 0;
             for (j = 0; j<100; j++){
                 if (f->content_names[j] == NULL) {
                     break;
                 }
+                counter++;
             }
             ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
             //bandwidth_g : gListによって更新
-	        f->bandwidth_g = 3000000 * j;
+	        f->bandwidth_g = 3000000 * counter;
 	        //bandwidth_f : 固定値
 	        f->bandwidth_f = 20000000;
 	        //send_g_amount : 0
