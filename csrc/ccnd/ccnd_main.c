@@ -125,7 +125,7 @@ main(int argc, char **argv)
     h = ccnd_create(argv[0], stdiologger, stderr);
     
     /*add by Fumiya for adaptive bandwidth control*/
-    bw_thread = pthread_create(&thread8, NULL, (void *)&bandwidth_calculation, h);
+//    bw_thread = pthread_create(&thread8, NULL, (void *)&bandwidth_calculation, h);
     /*add by Fumiya for adaptive bandwidth control*/
 
     if (h == NULL)
