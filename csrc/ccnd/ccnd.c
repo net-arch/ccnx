@@ -5670,6 +5670,7 @@ Bail:
         if ( strstr(f->buf, "GUARANTEE") != NULL) {
             content_tree_g_trim(h);
         }else{
+            ccnd_msg(h,"ここだよね？");
             content_tree_trim(h);
         }
         charbuf_release(h, f);
