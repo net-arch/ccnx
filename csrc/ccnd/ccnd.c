@@ -2163,6 +2163,7 @@ content_sender_qos(struct ccn_schedule *sched,
     struct content_queue *q = ev->evdata;
     (void)sched;
 
+    ccnd_msg(h,"そんでもってここは？1");
     if ((flags & CCN_SCHEDULE_CANCEL) != 0)
         goto Bail;
     face = face_from_faceid(h, faceid);
@@ -2181,7 +2182,7 @@ content_sender_qos(struct ccn_schedule *sched,
     burst_max = q->ready;
     if (burst_max == 0)
         q->nrun = 0;
-    ccnd_msg(h,"そんでもってここは？");
+    ccnd_msg(h,"そんでもってここは？2");
     for (i = 0; i < burst_max && nsec < 1000000; i++) {
         content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
         if (content == NULL)
@@ -2303,11 +2304,11 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     enum cq_delay_class c;
 
     //queueがまだなかった場合の処理
-    if (face->g_queue == NULL && content->control == GUARANTEE){
+    if (face->g_queue == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queue = content_queue_create(h, face, c);
     }
-    if (face->d_queue == NULL && content->control == DEFAULT){
+    if (face->d_queue == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->d_queue = content_queue_create(h, face, c);
     }
@@ -2341,6 +2342,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         system_flag = 1;
     }
     if (q == NULL) {
+        ccnd_msg(h,"もしかしてNULLだったりする？");
         return -1;
     }
     ccn_charbuf_destroy(&flatname);
