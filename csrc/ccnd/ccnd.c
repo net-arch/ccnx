@@ -2452,7 +2452,7 @@ consume_matching_interests(struct ccnd_handle *h,
                 strategy_callout(h, p, CCNST_SATISFIED, content_face->faceid);
             for (x = p->strategy.pfl; x != NULL; x = x->next) {
                 if ((x->pfi_flags & CCND_PFI_PENDING) != 0) {
-		            face_send_queue_insert_qos(h, face_from_faceid(h, x->faceid),content);
+		            face_send_queue_insert(h, face_from_faceid(h, x->faceid),content);
 		        }
             }
 	        matches += 1;
@@ -5121,7 +5121,7 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
 
                     /*  add by xu end -->*/
                     /*  kuwayama--> */
-                    k = face_send_queue_insert_qos(h, face, content);
+                    k = face_send_queue_insert(h, face, content);
                     if (k >= 0) {
                         if (h->debug & (32 | 8))
                             ccnd_debug_ccnb(h, __LINE__, "consume", face, msg, size);

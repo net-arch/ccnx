@@ -113,8 +113,8 @@ main(int argc, char **argv)
     struct ccnd_handle *h;
     
     /*add by Fumiya for adaptive bandwidth control*/
-    int bw_thread;
-    pthread_t thread8;
+//    int bw_thread;
+//    pthread_t thread8;
     /*add by Fumiya for adaptive bandwidth control*/
 
     if (argc > 1) {
