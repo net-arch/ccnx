@@ -2300,6 +2300,17 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
         face->g_contents=1;
+        char *s;
+        sprintf(s,"%s",ccn_charbuf_as_string(flatname));
+        for(i = 0;i<100;i++){
+            if(face->content_names[i] == NULL){
+                face->content_names[i] = s;
+            }
+            if(strcmp(face->content_names[i],s)==0){
+                ccnd_msg(h,"same content!");
+                break;
+            }
+        }
         q = face->g_queue;
     }else{
         q = face->d_queue;
