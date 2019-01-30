@@ -2294,7 +2294,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     struct ccn_charbuf *flatname = NULL;
     flatname = ccn_charbuf_create();
-//    ccn_flatname_from_ccnb(flatname,content->ccnb,content->size);
     ccn_flatname_append_from_ccnb(flatname,content->ccnb,content->size,0,2);
 
     int i;
@@ -2333,7 +2332,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         }
         q = face->g_queue;
     }else{
-        ccnd_msg(h,"ここは来てるの？");
         if(strstr(flatname->buf,"DEFAULT")!=NULL){
             ccnd_msg(h,"じゃあここは？");
             q = face->d_queue;
@@ -2342,7 +2340,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         system_flag = 1;
     }
     if (q == NULL) {
-        ccnd_msg(h,"もしかしてNULLだったりする？");
         return -1;
     }
     ccn_charbuf_destroy(&flatname);
@@ -2354,21 +2351,22 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     n = q->send_queue->n;
     if(content->control == GUARANTEE){
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
-    }else
+    }else {
+        ccnd_msg(h,"じゃあここは？2");
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
+    }
     if(q->control_queue->n <= ans)
         ccn_indexbuf_append_element(q->control_queue, content->control);
     if (n != q->send_queue->n)
         content->refs++;
     if (q->sender == NULL) {
+        ccnd_msg(h,"じゃあここは？3");
         q->ready = q->send_queue->n;
         delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
         if (system_flag == 1){
-            q->sender = ccn_schedule_event(h->sched, delay,
-                                           content_sender, q, face->faceid);
+            q->sender = ccn_schedule_event(h->sched, delay, content_sender, q, face->faceid);
         }else{
-            q->sender = ccn_schedule_event(h->sched, delay,
-                                           content_sender_qos, q, face->faceid);
+            q->sender = ccn_schedule_event(h->sched, delay, content_sender_qos, q, face->faceid);
         }
     }
     return (ans);
