@@ -2313,7 +2313,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (content->control == GUARANTEE) {
         face->g_contents=1;
         char *s = "g01";
-//        sprintf(s,"%s",flatname->buf);
+        srrcpy(s,flatname->buf);
         ccnd_msg(h,"%s",flatname->buf);
         for(i = 0;i<10;i++){
         }
