@@ -2321,7 +2321,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
                 break;
             }
             if(strcmp(face->content_names[i],s)==0){
-                ccnd_msg(h,"same content");
                 break;
             }
         }
