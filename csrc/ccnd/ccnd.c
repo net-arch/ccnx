@@ -2314,10 +2314,12 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         face->g_contents=1;
         char s[50];
         strcpy(s,flatname->buf);
-        ccnd_msg(h,"%s",flatname->buf);
         for(i = 0;i<10;i++){
+            if (face->content_names[i][1] == NULL){
+                face->content_names[i] = s;
+                ccnd_msg(h,"new content");
+            }
         }
-        ccnd_msg(h,"%s",s);
         q = face->g_queue;
     }else{
         q = face->d_queue;
