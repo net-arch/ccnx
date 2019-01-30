@@ -5347,7 +5347,7 @@ content_tree_trim(struct ccnd_handle *h) {
     for (c = h->headx->nextx; c != h->headx; c = nextx) {
         nextx = c->nextx;
         //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
-        if(c->control != GUARANTEE){
+        if(c->refs == 0 && c->control != GUARANTEE){
             content_dequeuex(h, c);
             ccnd_msg(h,"5351 remove");
             remove_content(h, c);
