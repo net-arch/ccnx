@@ -2188,6 +2188,7 @@ content_sender_qos(struct ccn_schedule *sched,
         else {
             //g,dの送信したコンテンツのサイズが帯域幅を超えていたら更新されるまで転送できない
             if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
+                ccnd_msg(h,"koko");
                 continue;
             }
             //全体の帯域幅の限界は迎えていない&&gの帯域幅が設定されていないときはgがないということなので通常モード
@@ -2323,7 +2324,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     n = q->send_queue->n;
     if(content->control == GUARANTEE){
-        face->amount_size_of_guarantee += content->size;
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
     }else
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
