@@ -2181,6 +2181,7 @@ content_sender_qos(struct ccn_schedule *sched,
     burst_max = q->ready;
     if (burst_max == 0)
         q->nrun = 0;
+    ccnd_msg(h,"そんでもってここは？");
     for (i = 0; i < burst_max && nsec < 1000000; i++) {
         content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
         if (content == NULL)
@@ -2212,7 +2213,7 @@ content_sender_qos(struct ccn_schedule *sched,
                     nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
                     q->nrun++;
                 }
-            }else if(face->sending_status == 1){
+            }else{
                 if(content->control == GUARANTEE){
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
@@ -2358,7 +2359,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (n != q->send_queue->n)
         content->refs++;
     if (q->sender == NULL) {
-        //そのフラグと一つのキューに与えられる帯域幅, remaining bandwidthの更新はmain loopの中に更新の関数を入れてやる
         q->ready = q->send_queue->n;
         delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
         if (system_flag == 1){
