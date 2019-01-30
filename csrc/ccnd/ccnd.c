@@ -2163,7 +2163,6 @@ content_sender_qos(struct ccn_schedule *sched,
     struct content_queue *q = ev->evdata;
     (void)sched;
 
-    ccnd_msg(h,"そんでもってここは？1");
     if ((flags & CCN_SCHEDULE_CANCEL) != 0)
         goto Bail;
     face = face_from_faceid(h, faceid);
@@ -5405,7 +5404,7 @@ content_tree_g_trim(struct ccnd_handle *h) {
     for (c = h->headx->nextx; c != h->headx; c = nextx) {
         nextx = c->nextx;
         //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
-        if(c->control == GUARANTEE){
+        if(c->refs == 0 && c->control == GUARANTEE){
             content_dequeuex(h, c);
             remove_content(h, c);
             if (h->content_tree_g->n <= h->capacity_g)
@@ -5639,7 +5638,6 @@ Bail:
         indexbuf_release(h, comps);
         if (res == 1) {
             if (n_matches < 0) {
-                ccnd_msg(h,"ここでremoveしてる？");
                 remove_content(h, content);
                 return;
             }
@@ -5671,7 +5669,6 @@ Bail:
         if ( strstr(f->buf, "GUARANTEE") != NULL) {
             content_tree_g_trim(h);
         }else{
-            ccnd_msg(h,"ここだよね？");
             content_tree_trim(h);
         }
         charbuf_release(h, f);
