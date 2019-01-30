@@ -7001,7 +7001,7 @@ ccnd_destroy(struct ccnd_handle **pccnd)
         for (i = 0; i < CCND_FACE_METER_N; i++)
             ccnd_meter_destroy(&h->face0->meter[i]);
         for (i = 0; i< 100 ;i++)
-            ccn_charbuf_destroy(&h->face0->gList[i]->content_name)
+            ccn_charbuf_destroy(&h->face0->gList[i]->content_name);
         content_queue_destroy(h,&(h->face0->g_queue));
         content_queue_destroy(h,&(h->face0->d_queue));
         free(h->face0);
