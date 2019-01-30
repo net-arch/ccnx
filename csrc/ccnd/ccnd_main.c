@@ -77,7 +77,7 @@ bandwidth_calculation(struct ccnd_handle *h){
                     break;
                 }
             }
-            ccnd_msg(h,"#send_g#:%d #send_d#:%d",f->send_g_amount,f->send_d_amount);
+            ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d ",f->send_g_amount,f->send_d_amount,f->faceid);
             //bandwidth_g : gListによって更新
 	        f->bandwidth_g = 3000000 * j;
 	        //bandwidth_f : 固定値
