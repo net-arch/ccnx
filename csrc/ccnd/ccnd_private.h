@@ -61,6 +61,7 @@ struct nameprefix_entry;
 struct interest_entry;
 struct guest_entry;
 struct ccn_forwarding;
+struct g_content_name;
 typedef int (*ccnd_logger)(void *loggerdata, const char *format, va_list ap);
 
 /* see nonce_entry */

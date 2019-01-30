@@ -65,6 +65,7 @@
 
 #include "ccnd_private.h"
 
+static struct g_content_name *content_name_create(void);
 static void cleanup_at_exit(void);
 static void unlink_at_exit(const char *path);
 static int create_local_listener(struct ccnd_handle *h, const char *sockname, int backlog);
@@ -413,6 +414,18 @@ choose_face_delay(struct ccnd_handle *h, struct face *face, enum cq_delay_class 
     return(1);
 }
 
+static struct g_content_name * content_name_create(void)
+{
+    struct g_content_name *n;
+    n->content_name = ccn_charbuf_create();
+    n->sending_status = 1;
+    if (n->content_name == NULL){
+        free(n)
+        return (NULL);
+    }
+    return (n);
+}
+
 /**
  * Create a queue for sending content.
  */
@@ -737,8 +750,12 @@ finalize_face(struct hashtb_enumerator *e)
             content_queue_destroy(h, &(face->q[c]));
         for (c = 0; c < QOS_QUEUE; c++)
             content_queue_destroy(h, &(face->qos_q[c]));
+        content_queue_destroy(h,&(face->g_queue));
+        content_queue_destroy(h,&(face->d_queue));
         ccn_charbuf_destroy(&face->inbuf);
         ccn_charbuf_destroy(&face->outbuf);
+        for (c = 0; c< 100 ;c++)
+            ccn_charbuf_destroy(h,&(face->gList[c]->content_name));
         ccnd_msg(h, "%s face id %u (slot %u)",
             recycle ? "recycling" : "releasing",
             face->faceid, face->faceid & MAXFACES);
@@ -1617,7 +1634,7 @@ record_connection(struct ccnd_handle *h, int fd,
 	face->number_of_guarantee_queue = 0;
 
 	face->bandwidth_g = 0;
-	face->bandwidth_f = 10000000;
+	face->bandwidth_f = 20000000;
 	face->send_g_amount = 0;
 	face->send_d_amount = 0;
 	face->sending_status = 1;
@@ -2169,12 +2186,15 @@ content_sender_qos(struct ccn_schedule *sched,
         if (content == NULL)
             q->nrun = 0;
         else {
+            //g,dの送信したコンテンツのサイズが帯域幅を超えていたら更新されるまで転送できない
             if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
-                break;
+                continue;
             }
+            //全体の帯域幅の限界は迎えていない&&gの帯域幅が設定されていないときはgがないということなので通常モード
             if (face->bandwidth_g == 0) {
                 face->sending_status = 1;
             }
+            //上の条件はクリアしたけどgが最大まで来ている→通常モード
             if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g) {
                 face->sending_status = 1;
             }
@@ -2193,6 +2213,7 @@ content_sender_qos(struct ccn_schedule *sched,
                     face->send_d_amount += content->size * 8;
                 }
             }
+            ccnd_msg(h,"#g_con_amo#:%d #d_con_amo#:%D",face->send_g_amount,face->send_d_amount);
             content->refs--;
             /* face may have vanished, bail out if it did */
             if (face_from_faceid(h, faceid) == NULL)
@@ -2261,41 +2282,37 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     int i;
     struct content_queue *q;
+    struct g_content_name *name;
     enum cq_delay_class c;
 
-    for(i = 0;i<QOS_QUEUE;i++){
-        if (face->qos_q[i] == NULL) {
-            c = choose_content_delay_class(h, face->faceid, content->flags);
-            if (content->control == GUARANTEE) {
-                face->number_of_guarantee_queue++;
-		        face->qos_q[i] = content_queue_create(h, face, c);
-                ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
-                q = face->qos_q[i];
-		        q->queue_type = CQ_GUARANTEE;
-		        q->bandwidth_of_face = 10000000;
-            } else {
-                face->number_of_default_queue++;
-		        face->qos_q[i] = content_queue_create(h, face, c);
-                ccn_charbuf_append_charbuf(face->qos_q[i]->content_name, flatname);
-                q = face->qos_q[i];
-                q->queue_type = CQ_DEFAULT;
-		        q->bandwidth_of_face = 10000000;
-            }
-            break;
-        }
-        if (strcmp(face->qos_q[i]->content_name->buf,flatname->buf) == 0){
-            q = face->qos_q[i];
-	        if(q->use_flag == 0){
-	    	    if(q->queue_type == CQ_GUARANTEE){
-			        face->number_of_guarantee_queue++;
-		        }else{
-			        face->number_of_default_queue++;
-		        }
-	        }
-	        q->use_flag = 1;
-            break;
-        }
+    //queueがまだなかった場合の処理
+    if (face->g_queue == NULL && content->control == GUARANTEE){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->g_queue = content_queue_create(h, face, c);
     }
+    if (face->d_queue == NULL && content->control == DEFAULT){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->d_queue = content_queue_create(h, face, c);
+    }
+    //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
+    //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
+    if (content->control == GUARANTEE) {
+        for (i=0;i<100;i++){
+            if (face->gList[i] == NULL){
+                face->gList[i] = content_name_create();
+                ccn_charbuf_append_charbuf(face->gList[i]->content_name, flatname);
+            }
+            if (strcmp(face->gList[i]->content_name->buf,flatname->buf) == 0){
+                if (face->gList[i]->sending_status == 0){
+                    face->gList[i]->sending_status = 1;
+                }
+            }
+        }
+        q = face->g_queue
+    }else{
+        q = face->d_queue
+    }
+    //TODO:名前リスト増減の条件を決める (入ってきたときに1にして1秒おきに0にしよう)
     if (q == NULL) {
         return -1;
     }
@@ -6983,6 +7000,8 @@ ccnd_destroy(struct ccnd_handle **pccnd)
             content_queue_destroy(h, &(h->face0->q[i]));
         for (i = 0; i < CCND_FACE_METER_N; i++)
             ccnd_meter_destroy(&h->face0->meter[i]);
+        content_queue_destroy(h,&(h->face0->g_queue));
+        content_queue_destroy(h,&(h->face0->d_queue));
         free(h->face0);
         h->face0 = NULL;
     }
