@@ -2292,7 +2292,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     struct ccn_charbuf *flatname = NULL;
     flatname = ccn_charbuf_create();
 //    ccn_flatname_from_ccnb(flatname,content->ccnb,content->size);
-    ccn_flatname_append_from_ccnb(flatname,content->ccnb,content->size,0,1);
+    ccn_flatname_append_from_ccnb(flatname,content->ccnb,content->size,0,2);
 
     int i;
     struct content_queue *q;
