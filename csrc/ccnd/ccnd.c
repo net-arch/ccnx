@@ -2213,7 +2213,7 @@ content_sender_qos(struct ccn_schedule *sched,
                     face->send_d_amount += content->size * 8;
                 }
             }
-            ccnd_msg(h,"#g_con_amo#:%d #d_con_amo#:%D",face->send_g_amount,face->send_d_amount);
+            ccnd_msg(h,"#g_con_amo#:%d #d_con_amo#:%d",face->send_g_amount,face->send_d_amount);
             content->refs--;
             /* face may have vanished, bail out if it did */
             if (face_from_faceid(h, faceid) == NULL)
@@ -2308,8 +2308,14 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 //                }
 //            }
 //        }
+        char *s;
+        s = ccn_charbuf_as_string(flatname);
+        ccnd_msg(h,"%s",s);
         q = face->g_queue;
     }else{
+        char *s;
+        s = ccn_charbuf_as_string(flatname);
+        ccnd_msg(h,"%s",s);
         q = face->d_queue;
     }
     //TODO:名前リスト増減の条件を決める (入ってきたときに1にして1秒おきに0にしよう)
