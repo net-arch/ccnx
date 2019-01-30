@@ -81,6 +81,7 @@ bandwidth_calculation(struct ccnd_handle *h){
             //bandwidth_g : gListによって更新
 	        f->bandwidth_g = 3000000 * j;
 	        //bandwidth_f : 固定値
+	        f->bandwidth_f = 20000000;
 	        //send_g_amount : 0
 	        f->send_g_amount = 0;
 	        //send_d_amount : 0
