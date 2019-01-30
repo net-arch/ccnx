@@ -5304,7 +5304,7 @@ content_tree_trim(struct ccnd_handle *h) {
     for (c = h->headx->nextx; c != h->headx; c = nextx) {
         nextx = c->nextx;
         //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
-        if(c->control != GUARANTEE){
+        if(c->refs == 0 && c->control != GUARANTEE){
             content_dequeuex(h, c);
             remove_content(h, c);
             if (h->content_tree->n <= h->capacity)
@@ -5360,7 +5360,7 @@ content_tree_g_trim(struct ccnd_handle *h) {
     for (c = h->headx->nextx; c != h->headx; c = nextx) {
         nextx = c->nextx;
         //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
-        if(c->control == GUARANTEE){
+        if(c->refs == 0 && c->control == GUARANTEE){
             content_dequeuex(h, c);
             remove_content(h, c);
             if (h->content_tree_g->n <= h->capacity_g)
