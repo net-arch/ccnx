@@ -100,6 +100,7 @@ bandwidth_calculation(struct ccnd_handle *h){
                     f->content_names[c][10] = '\0';
                 }
             }
+            f->g_contents = 0;
         }
     }
 }
