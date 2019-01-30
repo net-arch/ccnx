@@ -2204,6 +2204,8 @@ content_sender_qos(struct ccn_schedule *sched,
                 if (content->control == GUARANTEE) {
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
+                }else{
+                    break;
                 }
             }else if (face->sending_status == 1){
                 if(content->control == GUARANTEE){
