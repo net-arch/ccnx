@@ -2297,25 +2297,19 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
-//        for (i=0;i<100;i++){
-//            if (face->gList[i] == NULL){
-//                face->gList[i] = content_name_create();
-//                ccn_charbuf_append_charbuf(face->gList[i]->content_name, flatname);
-//            }
-//            if (strcmp(face->gList[i]->content_name->buf,flatname->buf) == 0){
-//                if (face->gList[i]->sending_status == 0){
-//                    face->gList[i]->sending_status = 1;
-//                }
-//            }
-//        }
         char *s;
         s = ccn_charbuf_as_string(flatname);
-        ccnd_msg(h,"%s",s);
+        for (i=0;i<100;i++){
+            if (face->content_names[i] == NULL){
+                face->content_names[i] == s;
+                ccnd_msg(h,"add content name");
+            }
+            if (strcmp(face->content_names[i],s) == 0){
+                break;
+            }
+        }
         q = face->g_queue;
     }else{
-        char *s;
-        s = ccn_charbuf_as_string(flatname);
-        ccnd_msg(h,"%s",s);
         q = face->d_queue;
     }
     //TODO:名前リスト増減の条件を決める (入ってきたときに1にして1秒おきに0にしよう)
