@@ -288,7 +288,7 @@ ccn_schedule_run_next(struct ccn_schedule *sched)
     struct ccn_scheduled_event *ev;
     heapmicros late;
     int res;
-    if (sched->heap_n == 0) return 0;
+    if (sched->heap_n == 0) return;
     ev = sched->heap[0].ev;
     sched->heap[0].ev = NULL;
     late = sched->now - sched->heap[0].event_time;
@@ -296,7 +296,7 @@ ccn_schedule_run_next(struct ccn_schedule *sched)
     res = (ev->action)(sched, sched->clienth, ev, 0);
     if (res <= 0) {
         free(ev);
-        return res;
+        return;
     }
     /*
      * Try to reschedule based on the time the

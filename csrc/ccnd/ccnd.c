@@ -2182,7 +2182,6 @@ content_sender_qos(struct ccn_schedule *sched,
     burst_max = q->ready;
     if (burst_max == 0)
         q->nrun = 0;
-    ccnd_msg(h,"そんでもってここは？2");
     for (i = 0; i < burst_max && nsec < 1000000; i++) {
         content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
         if (content == NULL)
@@ -2333,11 +2332,11 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         q = face->g_queue;
     }else{
         if(strstr(flatname->buf,"DEFAULT")!=NULL){
-            ccnd_msg(h,"じゃあここは？");
             q = face->d_queue;
+        }else {
+            q = face->system_queue;
+            system_flag = 1;
         }
-        q = face->system_queue;
-        system_flag = 1;
     }
     if (q == NULL) {
         return -1;
@@ -2352,7 +2351,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if(content->control == GUARANTEE){
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
     }else {
-        ccnd_msg(h,"じゃあここは？2");
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
     }
     if(q->control_queue->n <= ans)
@@ -2360,7 +2358,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (n != q->send_queue->n)
         content->refs++;
     if (q->sender == NULL) {
-        ccnd_msg(h,"じゃあここは？3");
         q->ready = q->send_queue->n;
         delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
         if (system_flag == 1){
