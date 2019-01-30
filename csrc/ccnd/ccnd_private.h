@@ -339,7 +339,7 @@ struct face {
 
     struct content_queue *g_queue;
     struct content_queue *d_queue;
-    unsigned char *content_names[100];
+    char *content_names[100];
     int bandwidth_g;
     int bandwidth_f;
     int send_g_amount;
