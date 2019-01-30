@@ -2299,8 +2299,8 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (content->control == GUARANTEE) {
         for (i=0;i<100;i++){
             if (face->content_names[i] == NULL){
-                face->content_names[i] = ccn_charbuf_as_string(flatname);
-                ccnd_msg(h,"add content name %s",face->content_names[i]);
+                face->content_names[i] = flatname->buf;
+                ccnd_msg(h,"add content name %hhu",face->content_names[i]);
                 break;
             }
             if (strcmp(face->content_names[i],ccn_charbuf_as_string(flatname)) == 0){
