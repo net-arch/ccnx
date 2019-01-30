@@ -2360,6 +2360,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         q->ready = q->send_queue->n;
         delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
         if (system_flag == 1){
+            ccnd_msg(h,"use system queue");
             q->sender = ccn_schedule_event(h->sched, delay,
                                            content_sender, q, face->faceid);
         }else{
