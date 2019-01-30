@@ -93,7 +93,12 @@ bandwidth_calculation(struct ccnd_handle *h){
             if (h->faces_by_faceid[i] == NULL)
                 continue;
             f = h->faces_by_faceid[i];
-            f->g_contents = 0;
+            int c;
+            for(c = 0;c<10;c++){
+                if(face->content_names[i][1] != NULL){
+                    face->content_names[i] = NULL;
+                }
+            }
         }
     }
 }
