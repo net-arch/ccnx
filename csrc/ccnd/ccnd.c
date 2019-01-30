@@ -2286,7 +2286,6 @@ content_sender_qos(struct ccn_schedule *sched,
 static int
 face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct content_entry *content)
 {
-    ccnd_msg(h,"use this");
     if (face == NULL || content == NULL || (face->flags & CCN_FACE_NOSEND) != 0)
         return(-1);
 
@@ -2322,7 +2321,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         for(i = 0;i<10;i++){
             if(face->content_names[i][1] == NULL || face->content_names[i][1] == '\0'){
                 strcpy(face->content_names[i],s);
-                ccnd_msg(h,"new content");
                 face->g_contents++;
                 break;
             }
@@ -2361,7 +2359,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         q->ready = q->send_queue->n;
         delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
         if (system_flag == 1){
-            ccnd_msg(h,"use system queue");
             q->sender = ccn_schedule_event(h->sched, delay,
                                            content_sender, q, face->faceid);
         }else{
