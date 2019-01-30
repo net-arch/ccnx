@@ -2441,8 +2441,7 @@ is_pending_on(struct ccnd_handle *h, struct interest_entry *ie, unsigned faceid)
     struct pit_face_item *x;
     
     for (x = ie->strategy.pfl; x != NULL; x = x->next) {
-        //koko
-//        if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
+       if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
             return(1);
         // XXX - depending on how list is ordered, an early out might be possible
         // For now, we assume no particular ordering
@@ -5102,8 +5101,10 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
             for (try = 0; content != NULL; try++) {
                 if (!s_ok && is_stale(h, content)) {
                     next = content_next(h, content);
-                    if (content->refs == 0)
+                    if (content->refs == 0) {
+                        ccnd_msg(h,"5105 remove");
                         remove_content(h, content);
+                    }
                     else
                         try--;
                     content = next;
@@ -5347,6 +5348,7 @@ content_tree_trim(struct ccnd_handle *h) {
         //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
         if(c->control != GUARANTEE){
             content_dequeuex(h, c);
+            ccnd_msg(h,"5351 remove");
             remove_content(h, c);
             if (h->content_tree->n <= h->capacity)
                 return;
@@ -5383,6 +5385,7 @@ content_tree_trim(struct ccnd_handle *h) {
         /* we've tried and failed to preserve queued content */
         c = h->headx->nextx;
         if (c != h->headx && c->control != GUARANTEE)
+            ccnd_msg(h,"5388 remove");
             remove_content(h, c); /* logs remove_queued_content */
     }
 }
