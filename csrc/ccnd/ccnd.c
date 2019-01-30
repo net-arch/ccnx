@@ -2298,10 +2298,10 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
         unsigned char *s;
-        s = flatname->buf;
         for (i=0;i<100;i++){
             if (face->content_names[i] == NULL){
-                strcpy(face->content_names[i],s);
+                ccnd_msg(h,"add content name %s",flatname->buf);
+                strcpy(face->content_names[i],flatname->buf);
                 ccnd_msg(h,"add content name");
                 break;
             }
