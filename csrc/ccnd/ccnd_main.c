@@ -76,6 +76,8 @@ bandwidth_calculation(struct ccnd_handle *h){
             ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
             //bandwidth_g : gListによって更新
 	        f->bandwidth_g = 3000000 * f->g_contents;
+	        if (f->bandwidth_g > 6000000)
+                f->bandwidth_g = 6000000
 	        //bandwidth_f : 固定値
 	        f->bandwidth_f = 10000000;
 	        //send_g_amount : 0
