@@ -2314,12 +2314,12 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         char *s;
         sprintf(s,"%s",ccn_charbuf_as_string(flatname));
         for(i = 0;i<10;i++){
-            if(face->content_names[i][] == NULL){
-                face->content_names[i][] = s;
+            if(face->content_names[i][1] == NULL){
+                face->content_names[i][1] = s;
                 ccnd_msg(h,"other content!");
                 break;
             }
-            if(strcmp(face->content_names[i],s)==0){
+            if(strcmp(face->content_names[i][1],s)==0){
                 ccnd_msg(h,"same content!");
                 break;
             }
