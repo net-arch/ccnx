@@ -2189,8 +2189,7 @@ content_sender_qos(struct ccn_schedule *sched,
         else {
             //g,dの送信したコンテンツのサイズが帯域幅を超えていたら更新されるまで転送できない
             if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
-                q->nrun = 0;
-                continue;
+                break;
             }
             //全体の帯域幅の限界は迎えていない&&gの帯域幅が設定されていないときはgがないということなので通常モード
             if (face->bandwidth_g == 0) {
@@ -2212,6 +2211,8 @@ content_sender_qos(struct ccn_schedule *sched,
                         goto Bail;
                     nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
                     q->nrun++;
+                }else{
+                    break;
                 }
             }else{
                 if(content->control == GUARANTEE){
