@@ -2331,7 +2331,9 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         }
         q = face->g_queue;
     }else{
+        ccnd_msg(h,"ここは来てるの？");
         if(strstr(flatname->buf,"DEFAULT")!=NULL){
+            ccnd_msg(h,"じゃあここは？");
             q = face->d_queue;
         }
         q = face->system_queue;
