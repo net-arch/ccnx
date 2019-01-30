@@ -94,9 +94,10 @@ bandwidth_calculation(struct ccnd_handle *h){
                 continue;
             f = h->faces_by_faceid[i];
             int c;
+            int d;
             for(c = 0;c<10;c++){
-                if(f->content_names[i][1] != '\0'){
-                    f->content_names[i] = '\0';
+                for(d = 0; d<50;d++){
+                    f->content_names[c][10] = '\0';
                 }
             }
         }
