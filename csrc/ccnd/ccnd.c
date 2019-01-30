@@ -2286,6 +2286,7 @@ content_sender_qos(struct ccn_schedule *sched,
 static int
 face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct content_entry *content)
 {
+    ccnd_msg(h,"use this");
     if (face == NULL || content == NULL || (face->flags & CCN_FACE_NOSEND) != 0)
         return(-1);
 
