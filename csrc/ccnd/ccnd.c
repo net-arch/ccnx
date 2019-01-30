@@ -2196,7 +2196,6 @@ content_sender_qos(struct ccn_schedule *sched,
             }
             //上の条件はクリアしたけどgが最大まで来ている→通常モード
             if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g && face->sending_status == 0) {
-                ccnd_msg(h,"move normal mode");
                 face->sending_status = 1;
             }
 
@@ -2224,7 +2223,6 @@ content_sender_qos(struct ccn_schedule *sched,
                     nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
                     q->nrun++;
                 }else{
-                    ccnd_msg(h,"normal content");
                     send_content(h, face, content);
                     face->send_d_amount += content->size * 8;
                     content->refs--;
