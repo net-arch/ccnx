@@ -2291,7 +2291,8 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     struct ccn_charbuf *flatname = NULL;
     flatname = ccn_charbuf_create();
-    ccn_flatname_from_ccnb(flatname,content->ccnb,content->size);
+//    ccn_flatname_from_ccnb(flatname,content->ccnb,content->size);
+    ccn_flatname_append_from_ccnb(flatname,content->ccnb,content->size,0,-1);
 
     int i;
     struct content_queue *q;
@@ -2311,19 +2312,11 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
         face->g_contents=1;
-        char *s;
-        sprintf(s,"%s",ccn_charbuf_as_string(flatname));
-        for(i = 0;i<10;i++){
-            if(face->content_names[i][1] == NULL){
-                face->content_names[i][1] = s;
-                ccnd_msg(h,"other content!");
-                break;
-            }
-            if(strcmp(face->content_names[i][1],s)==0){
-                ccnd_msg(h,"same content!");
-                break;
-            }
-        }
+//        char *s;
+//        sprintf(s,"%s",ccn_charbuf_as_string(flatname));
+//        for(i = 0;i<10;i++){
+//        }
+        ccnd_msg(h,"%s",flatname->buf);
         q = face->g_queue;
     }else{
         q = face->d_queue;
