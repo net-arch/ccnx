@@ -2297,19 +2297,15 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
-//        for (i=0;i<100;i++){
-//            if (face->content_names[i] == NULL){
-////                face->content_names[i] = flatname->buf;
-////                sprintf(face->content_names[i],"%s",ccn_charbuf_as_string(flatname));
-////                ccnd_msg(h,"add content name %s",face->content_names[i]);
-//                ccnd_msg(h,"%hhu",flatname->buf);
-//                break;
-//            }
-//            if (strcmp(face->content_names[i],ccn_charbuf_as_string(flatname)) == 0){
-//                break;
-//            }
-//        }
-        ccnd_msg(h,"%s",ccn_charbuf_as_string(flatname));
+        for (i=0;i<100;i++){
+            if (face->content_names[i] == NULL){
+                sprintf(face->content_names[i],"%s",ccn_charbuf_as_string(flatname));
+                break;
+            }
+            if (strcmp(face->content_names[i],ccn_charbuf_as_string(flatname)) == 0){
+                break;
+            }
+        }
         q = face->g_queue;
     }else{
         q = face->d_queue;
