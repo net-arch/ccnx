@@ -2213,7 +2213,6 @@ content_sender_qos(struct ccn_schedule *sched,
                     face->send_d_amount += content->size * 8;
                 }
             }
-            ccnd_msg(h,"#g_con_amo#:%d #d_con_amo#:%d",face->send_g_amount,face->send_d_amount);
             content->refs--;
             /* face may have vanished, bail out if it did */
             if (face_from_faceid(h, faceid) == NULL)

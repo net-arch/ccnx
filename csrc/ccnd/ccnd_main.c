@@ -49,6 +49,7 @@ static void
 bandwidth_calculation(struct ccnd_handle *h){
 	struct timeval tv;
 	struct timeval time_last_1sec={0}; //一秒集計用のtimeval
+    struct timeval time_last_2sec={0};
 	int k = 0;
 
     unsigned i;
@@ -63,12 +64,6 @@ bandwidth_calculation(struct ccnd_handle *h){
 
     while(k<100000000000000){
 	gettimeofday(&tv,NULL);
-	//queueの更新作業
-        for (i = 0; i < h->face_limit ; i++){
-            if (h->faces_by_faceid[i] == NULL)
-                continue;
-            f = h->faces_by_faceid[i];
-        }
 	//最終更新時間から1秒が経過していた時
 	if((tv.tv_sec - time_last_1sec.tv_sec) >= 1){
 	    time_last_1sec = tv;
@@ -77,8 +72,14 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
+            for (j = 0; j<100; j++){
+                if (f->content_names[j] == NULL) {
+                    break;
+                }
+            }
+            ccnd_msg(h,"#send_g#:%d #send_d#:%d",f->send_g_amount,f->send_d_amount);
             //bandwidth_g : gListによって更新
-	        f->bandwidth_g = 0;
+	        f->bandwidth_g = 3000000 * j;
 	        //bandwidth_f : 固定値
 	        //send_g_amount : 0
 	        f->send_g_amount = 0;
@@ -88,7 +89,23 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        f->sending_status = 0;
 	    }
 	}
+    if((tv.tv_sec - time_last_2sec.tv_sec) >= 2){
+        time_last_2sec = tv;
+
+        for (i = 0; i < h->face_limit ; i++){
+            if (h->faces_by_faceid[i] == NULL)
+                continue;
+            f = h->faces_by_faceid[i];
+            for (j = 0; j<100; j++){
+                if (f->content_names[j] == NULL) {
+                    break;
+                }else{
+                    f->content_names[j] = NULL;
+                }
+            }
+        }
     }
+}
 }
 /*add by Fumiya for adaptive bandwidth control*/
 
