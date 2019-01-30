@@ -2441,7 +2441,8 @@ is_pending_on(struct ccnd_handle *h, struct interest_entry *ie, unsigned faceid)
     struct pit_face_item *x;
     
     for (x = ie->strategy.pfl; x != NULL; x = x->next) {
-        if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
+        //koko
+//        if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
             return(1);
         // XXX - depending on how list is ordered, an early out might be possible
         // For now, we assume no particular ordering
@@ -5634,6 +5635,7 @@ Bail:
         indexbuf_release(h, comps);
         if (res == 1) {
             if (n_matches < 0) {
+                ccnd_msg(h,"ここでremoveしてる？");
                 remove_content(h, content);
                 return;
             }
@@ -5662,8 +5664,6 @@ Bail:
         }
         // todo: handle multiple content tree
         //       consider whether the handle should be inside or outside of content_tree_trim
-
-
         if ( strstr(f->buf, "GUARANTEE") != NULL) {
             content_tree_g_trim(h);
         }else{
