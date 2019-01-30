@@ -420,7 +420,7 @@ static struct g_content_name * content_name_create(void)
     n->content_name = ccn_charbuf_create();
     n->sending_status = 1;
     if (n->content_name == NULL){
-        free(n)
+        free(n);
         return (NULL);
     }
     return (n);
@@ -2308,9 +2308,9 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
                 }
             }
         }
-        q = face->g_queue
+        q = face->g_queue;
     }else{
-        q = face->d_queue
+        q = face->d_queue;
     }
     //TODO:名前リスト増減の条件を決める (入ってきたときに1にして1秒おきに0にしよう)
     if (q == NULL) {
