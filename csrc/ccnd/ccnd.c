@@ -2195,7 +2195,7 @@ content_sender_qos(struct ccn_schedule *sched,
                 face->sending_status = 1;
             }
             //上の条件はクリアしたけどgが最大まで来ている→通常モード
-            if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g) {
+            if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g && face->sending_status == 0) {
                 ccnd_msg(h,"move normal mode");
                 face->sending_status = 1;
             }
