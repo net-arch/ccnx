@@ -2314,7 +2314,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         char s[50];
         strcpy(s,flatname->buf);
         for(i = 0;i<10;i++){
-            if(face->content_names[i][1] == NULL){
+            if(face->content_names[i][1] == NULL || face->content_names[i][1] == '\0'){
                 strcpy(face->content_names[i],s);
                 ccnd_msg(h,"new content");
                 face->g_contents++;

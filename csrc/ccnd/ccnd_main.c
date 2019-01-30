@@ -97,7 +97,7 @@ bandwidth_calculation(struct ccnd_handle *h){
             int d;
             for(c = 0;c<10;c++){
                 for(d = 0; d<50;d++){
-                    f->content_names[c][10] = '\0';
+                    f->content_names[c][d] = '\0';
                 }
             }
             f->g_contents = 0;
