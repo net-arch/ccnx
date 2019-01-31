@@ -1,0 +1,397 @@
+1548891850.000000 ccnd[4469]:  ____________________ Thu Jan 31 08:44:10 2019
+1548891850.887690 00000000.ccnd[4469]: =======================ex index n: 0
+1548891850.887733 00000000.ccnd[4469]: =======================ex index l: 12
+1548891850.887738 ccnd[4469]: CCND_DEBUG=1 CCND_CAP=5000
+1548891850.887741 ccnd[4469]: CCND_DEBUG=1 CCND_CAP_G=5000
+1548891850.887816 ccnd[4469]: listening on /tmp/.ccnd.sock
+1548891850.887833 ccnd[4469]: accepting ipv4 datagrams on fd 4 rcvbuf 212992
+1548891850.887841 ccnd[4469]: accepting ipv4 connections on fd 5
+1548891850.887851 ccnd[4469]: accepting ipv6 datagrams on fd 6 rcvbuf 212992
+1548891850.887859 ccnd[4469]: accepting ipv6 connections on fd 7
+1548891850.938348 ccnd[4469]: accepted client fd=8 id=6
+1548891850.938411 ccnd[4469]: shutdown client fd=8 id=6
+1548891850.938417 ccnd[4469]: recycling face id 6 (slot 6)
+1548891851.886250 ccnd[4469]: accepted client fd=8 id=6
+1548891851.886867 ccnr[4474]: CCNR_DEBUG=7 CCNR_DIRECTORY=. CCNR_STATUS_PORT=
+1548891851.886998 ccnr[4474]: Repository file is indexed
+1548891851.888782 ccnd[4469]: accepted client fd=9 id=7
+1548891851.897901 ccnd[4469]: accepted datagram client id=8 (flags=0x40012) 192.168.101.11 port 9695
+1548891851.903848 ccnd[4469]: shutdown client fd=8 id=6
+1548891851.903857 ccnd[4469]: releasing face id 6 (slot 6)
+1548891852.000011 ccnd[4469]: #send_g#:0 #send_d#:49712 #face#:7 #band#:0 #band_f#:20000000
+1548891855.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891866.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891868.000001 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:0 #band#:0 #band_f#:20000000
+1548891868.000017 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548891869.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548891871.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891879.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891887.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891895.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891903.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891911.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891919.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891927.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891935.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891943.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891951.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891959.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891967.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891975.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891983.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891989.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548891989.000022 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548891991.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548891999.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892007.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892015.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892023.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892031.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892039.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892047.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892056.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892063.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892071.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892079.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892087.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892095.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892101.000002 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892103.000001 ccnd[4469]: #send_g#:0 #send_d#:8528 #face#:8 #band#:0 #band_f#:20000000
+1548892111.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892119.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892127.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892135.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892143.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892151.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892159.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892167.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892173.000002 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892175.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892178.000002 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892183.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892191.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892199.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892207.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892215.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892224.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892231.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892238.000002 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892239.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892247.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892255.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892263.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892266.000004 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892271.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892279.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892287.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892295.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892303.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892311.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892319.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892329.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892335.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892343.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892351.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892353.000002 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892354.000001 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892359.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892367.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892375.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892383.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892391.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892399.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892407.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892415.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892423.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892431.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892436.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892439.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892447.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892455.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892462.000003 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892463.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892471.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892479.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892487.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892495.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892504.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892511.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892519.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892523.000001 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892527.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892535.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892544.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892549.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892551.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892559.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892567.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892575.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892583.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892585.000001 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892591.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892599.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892607.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892615.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892623.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892631.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892639.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892647.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892655.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892655.000031 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892663.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892671.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892679.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892687.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892695.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892698.000004 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892703.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892711.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892719.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892727.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892736.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892743.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892752.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892754.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892759.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892767.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892771.000004 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892775.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892783.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892791.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892799.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892807.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892815.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892823.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892831.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892839.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892847.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892855.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892864.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892871.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892874.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892879.000001 ccnd[4469]: #send_g#:0 #send_d#:8528 #face#:8 #band#:0 #band_f#:20000000
+1548892887.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892895.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892903.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892911.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892919.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892927.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892935.000001 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548892935.000019 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892943.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892951.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892959.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892967.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892975.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892980.000004 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548892983.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892991.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548892999.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893007.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893008.000001 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893015.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893024.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893031.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893039.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893041.000001 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893047.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893055.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893063.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893071.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893079.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893086.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893087.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893095.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893103.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893111.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893119.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893127.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893136.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893143.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893148.000004 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893151.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893159.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893167.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893175.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893182.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893183.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893191.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893199.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893207.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893214.000003 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893215.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893223.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893231.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893239.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893247.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893255.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893263.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893272.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893279.000001 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893279.000019 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893287.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893295.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893303.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893312.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893313.000001 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893319.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893327.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893335.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893343.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893351.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893359.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893367.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893375.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893383.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893385.000001 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893391.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893399.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893401.000001 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893407.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893416.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893423.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893431.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893439.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893447.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893455.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893463.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893471.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893479.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893487.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893490.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893495.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893499.000003 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893503.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893511.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893519.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893527.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893535.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893543.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893551.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893557.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893559.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893567.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893575.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893582.000004 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893583.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893591.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893599.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893607.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893615.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893623.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893631.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893639.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893647.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893655.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893660.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893663.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893665.000001 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893671.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893679.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893687.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893695.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893703.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893711.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893719.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893727.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893733.000003 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893735.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893743.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893751.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893754.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893759.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893767.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893775.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893783.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893791.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893799.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893807.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893815.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893823.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893831.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893837.000003 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893839.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893847.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893849.000001 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893855.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893863.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893872.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893880.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893887.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893897.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893903.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893911.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893920.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893927.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893935.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893938.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548893943.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893951.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893956.000004 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548893959.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893967.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893975.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893983.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893991.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548893999.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894007.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894015.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894023.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894031.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894040.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894047.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894050.000004 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548894055.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894063.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894071.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894074.000003 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548894079.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894087.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894095.000002 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894103.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894111.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894119.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894127.000003 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548894127.000025 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894135.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894143.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894149.000003 ccnd[4469]: #send_g#:0 #send_d#:3880 #face#:8 #band#:0 #band_f#:20000000
+1548894151.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894159.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894168.000001 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894175.000013 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894183.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894191.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894199.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894207.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894215.000003 ccnd[4469]: #send_g#:0 #send_d#:8528 #face#:8 #band#:0 #band_f#:20000000
+1548894223.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894232.000001 ccnd[4469]: #send_g#:0 #send_d#:3888 #face#:0 #band#:0 #band_f#:20000000
+1548894232.000017 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894239.000004 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894247.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894255.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894263.000003 ccnd[4469]: #send_g#:0 #send_d#:4648 #face#:8 #band#:0 #band_f#:20000000
+1548894287.098188 ccnd[4469]: accepted client fd=8 id=9
+1548894287.099679 ccnd[4469]: accepted client fd=10 id=10
+1548894287.099691 ccnd[4469]: stopping (/tmp/.ccnd.sock gone)
+1548894287.099694 ccnd[4469]: exiting.
+1548894287.099701 ccnd[4469]: closing fd 3 while finalizing face 1
+1548894287.099704 ccnd[4469]: releasing face id 1 (slot 1)
+1548894287.099710 ccnd[4469]: closing fd 5 while finalizing face 3
+1548894287.099713 ccnd[4469]: releasing face id 3 (slot 3)
+1548894287.099717 ccnd[4469]: closing fd 7 while finalizing face 5
+1548894287.099720 ccnd[4469]: releasing face id 5 (slot 5)
+1548894287.099725 ccnd[4469]: closing fd 4 while finalizing face 2
+1548894287.099728 ccnd[4469]: releasing face id 2 (slot 2)
+1548894287.099732 ccnd[4469]: closing fd 6 while finalizing face 4
+1548894287.099735 ccnd[4469]: releasing face id 4 (slot 4)
+1548894287.099783 ccnd[4469]: releasing face id 8 (slot 8)
+1548894287.099789 ccnd[4469]: closing fd 8 while finalizing face 9
+1548894287.099791 ccnd[4469]: releasing face id 9 (slot 9)
+1548894287.099801 ccnd[4469]: closing fd 10 while finalizing face 10
+1548894287.099804 ccnd[4469]: recycling face id 10 (slot 10)
+1548894287.099811 ccnd[4469]: closing fd 9 while finalizing face 7
+1548894287.099814 ccnd[4469]: releasing face id 7 (slot 7)
+1548894287.100075 ccnr[4474]: lost connection to ccnd
+1548894287.100085 ccnr[4474]: exiting.
