@@ -2193,6 +2193,10 @@ content_sender_qos(struct ccn_schedule *sched,
             //全体の帯域幅の限界は迎えていない&&gの帯域幅が設定されていないときはgがないということなので通常モード
             if (face->bandwidth_g == 0) {
                 face->sending_status = 1;
+            }else{
+                if (face->g_queue->ready == 0){
+                    face->sending_status = 1;
+                }
             }
             //上の条件はクリアしたけどgが最大まで来ている→通常モード
             if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g && face->sending_status == 0) {

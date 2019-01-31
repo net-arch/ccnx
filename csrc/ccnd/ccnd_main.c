@@ -79,7 +79,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (f->bandwidth_g > 9000000)
                 f->bandwidth_g = 9000000;
 	        //bandwidth_f : 固定値
-	        f->bandwidth_f = 3000000;
+	        f->bandwidth_f = 6000000;
 	        //send_g_amount : 0
 	        f->send_g_amount = 0;
 	        //send_d_amount : 0
