@@ -532,11 +532,6 @@ enum ccn_parsed_interest_offsetid {
     CCN_PI_E
 };
 
-
-/* <!--kuwayama */
-//Migrate to code.h, for ccnd.c//commented by xu //enum controlpacketid {DEFAULT = 0, RESERVE = 1, GUARANTEE = 2, NOTICE = 3, RELEASE = 4};
-/*  kuwayama--> */
-
 struct ccn_parsed_interest {
     int magic;
     int prefix_comps;
@@ -547,9 +542,6 @@ struct ccn_parsed_interest {
     int scope;
     int control;//add by xu
     unsigned short offset[CCN_PI_E+1];
-  /* <!--kuwayama */
-  //enum controlpacketid control;
-  /*  kuwayama--> */
 };
 
 enum ccn_parsed_Link_offsetid {

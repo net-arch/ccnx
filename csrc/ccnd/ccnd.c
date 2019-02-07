@@ -4992,12 +4992,22 @@ drop_nonlocal_interest(struct ccnd_handle *h, struct nameprefix_entry *npe,
  *  on that face that also match this object.
  * Otherwise, initiate propagation of the interest.
  */
+ /*
+  *
+  *
+  struct ccn_indexbuf {
+    size_t n;
+    size_t limit;
+    size_t *buf;
+  };
+  * */
 static void
 process_incoming_interest(struct ccnd_handle *h, struct face *face,
                           unsigned char *msg, size_t size)
 {
     struct hashtb_enumerator ee;
     struct hashtb_enumerator *e = &ee;
+    //解析済みinterest情報を入れる構造体
     struct ccn_parsed_interest parsed_interest = {0};
     struct ccn_parsed_interest *pi = &parsed_interest;
     int k;
@@ -5700,6 +5710,7 @@ process_input_message(struct ccnd_handle *h, struct face *face,
         /* YYY This is the first place that we know that an inbound stream face is speaking CCNx protocol. */
         register_new_face(h, face);
     }
+    //CCN_DSTATE_PAUSEをセットして解析を行うとバイトストリームのタグを返してくれるようになる
     d->state |= CCN_DSTATE_PAUSE;
     dres = ccn_skeleton_decode(d, msg, size);
     if (d->state < 0)
@@ -5710,6 +5721,7 @@ process_input_message(struct ccnd_handle *h, struct face *face,
         return;
     }
     dtag = d->numval;
+    //解析結果のタグからそれがなんのメッセージか判断してそれぞれの処理に移動する
     switch (dtag) {
         case CCN_DTAG_CCNProtocolDataUnit:
             if (!pdu_ok)
@@ -5873,10 +5885,17 @@ process_input_buffer(struct ccnd_handle *h, struct face *face)
     d = &face->decoder;
     msg = face->inbuf->buf;
     size = face->inbuf->length;
+    //@param d->index is number of bytes processed
+    //下のwhileが回るということはmsgの全てのバイトを処理しきっていないということ
     while (d->index < size) {
+        //@param msg+d->indexはmsgのポインタを未処理のところまで移動させている. つまり未処理のバイトのポインタを渡している
+        //@param size -d->indexはまだ処理していないバイトの数を表している
+        //ここで行われるskeleton decodeではバイトストリームを解析してデータが正しいかどうかを判断しているだけ
         dres = ccn_skeleton_decode(d, msg + d->index, size - d->index);
         if (d->state != 0)
             break;
+        //@param msg + d->index - dresは今回のデコードで解析した分を巻き戻してポインタを渡している = 解析したバイトの一番最初をさしている
+        //@param dres 解析したバイト数を表している
         process_input_message(h, face, msg + d->index - dres, dres, 0);
     }
     if (d->index != size) {
@@ -6018,11 +6037,15 @@ process_internal_client_buffer(struct ccnd_handle *h)
     struct face *face = h->face0;
     if (face == NULL)
         return;
+    //get the out buffer form internal client
     face->inbuf = ccn_grab_buffered_output(h->internal_client);
     if (face->inbuf == NULL)
         return;
+    //statistics information
     ccnd_meter_bump(h, face->meter[FM_BYTI], face->inbuf->length);
+    //in this function process input buffer
     process_input_buffer(h, face);
+    //proccess of in buffer is finished so init in buffer
     ccn_charbuf_destroy(&(face->inbuf));
 }
 

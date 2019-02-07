@@ -1163,6 +1163,10 @@ ccn_output_is_pending(struct ccn *h)
     return(h != NULL && h->outbuf != NULL && h->outbufindex < h->outbuf->length);
 }
 
+/*
+ * in ccnd, @param h is internal client. catch internal clients out buffer
+ * and init outbuf. then @return ccn_charbuf which got form internal clients out buffer
+ * */
 struct ccn_charbuf *
 ccn_grab_buffered_output(struct ccn *h)
 {
