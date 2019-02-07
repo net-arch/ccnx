@@ -82,7 +82,7 @@ bandwidth_calculation(struct ccnd_handle *h){
                 f->bandwidth_g = 9000000;
 	        f->size_of_guarantee_per_second = 0;
 	        //bandwidth_f : 固定値
-	        f->bandwidth_f = 20000000;
+	        f->bandwidth_f = 4000000;
 	        //send_g_amount : 0
 	        f->send_g_amount = 0;
 	        //send_d_amount : 0
