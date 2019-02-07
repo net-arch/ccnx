@@ -65,6 +65,8 @@ bandwidth_calculation(struct ccnd_handle *h){
     while(k<100000000000000){
 	gettimeofday(&tv,NULL);
 	//最終更新時間から1秒が経過していた時
+	//mainでやりたいことは, 　arriveのamount分帯域をこじ開けること
+	//arriveを初期化すること
 	if((tv.tv_sec - time_last_1sec.tv_sec) >= 1){
 	    time_last_1sec = tv;
 
@@ -74,10 +76,11 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        f = h->faces_by_faceid[i];
 //            if (f->send_d_amount > 0 || f->send_g_amount >0)
                 ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
-            //bandwidth_g : gListによって更新
-	        f->bandwidth_g = 3000000 * f->g_contents;
+            //bandwidth_g : 一秒間に届いたDATAの分こじ開ける（上限9Mbps）
+	        f->bandwidth_g = f->size_of_guarantee_per_second * 8;
 	        if (f->bandwidth_g > 9000000)
                 f->bandwidth_g = 9000000;
+	        f->size_of_guarantee_per_second = 0;
 	        //bandwidth_f : 固定値
 	        f->bandwidth_f = 20000000;
 	        //send_g_amount : 0
@@ -88,23 +91,6 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        f->sending_status = 0;
 	    }
 	}
-    if((tv.tv_sec - time_last_2sec.tv_sec) >= 2){
-        time_last_2sec = tv;
-
-        for (i = 0; i < h->face_limit ; i++){
-            if (h->faces_by_faceid[i] == NULL)
-                continue;
-            f = h->faces_by_faceid[i];
-            int c;
-            int d;
-            for(c = 0;c<10;c++){
-                for(d = 0; d<50;d++){
-                    f->content_names[c][d] = '\0';
-                }
-            }
-            f->g_contents = 0;
-        }
-    }
 }
 }
 /*add by Fumiya for adaptive bandwidth control*/

@@ -259,7 +259,7 @@ struct content_queue {
     //add by Fumiya
     struct ccn_charbuf *content_name;
     enum queue_class queue_type;
-    int bandwidth_of_face;
+//    int bandwidth_of_face;
     int bandwidth;
     int remaining_bandwidth;
     struct timeval last_use;
@@ -330,18 +330,13 @@ struct face {
     unsigned short adjstate;    /**< state of adjacency negotiotiation */
 
     /*add by Fumiya for adaptive bandwidth control*/
-    int amount_size_of_guarantee;
-    int send_size_of_guarantee;
-    int bandwidth_of_face;
-    int number_of_default_queue;
-    int number_of_guarantee_queue;
-    struct content_queue *qos_q[QOS_QUEUE];
+    int amount_size_of_guarantee; //永続
+    int size_of_guarantee_per_second; //一秒間で初期化
 
     struct content_queue *g_queue;
     struct content_queue *d_queue;
     struct content_queue *system_queue;
-    char content_names[10][50];
-    int g_contents;
+
     int bandwidth_g;
     int bandwidth_f;
     int send_g_amount;

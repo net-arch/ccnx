@@ -748,8 +748,8 @@ finalize_face(struct hashtb_enumerator *e)
         }
         for (c = 0; c < CCN_CQ_N; c++)
             content_queue_destroy(h, &(face->q[c]));
-        for (c = 0; c < QOS_QUEUE; c++)
-            content_queue_destroy(h, &(face->qos_q[c]));
+//        for (c = 0; c < QOS_QUEUE; c++)
+//            content_queue_destroy(h, &(face->qos_q[c]));
         content_queue_destroy(h,&(face->g_queue));
         content_queue_destroy(h,&(face->d_queue));
         ccn_charbuf_destroy(&face->inbuf);
@@ -1629,9 +1629,7 @@ record_connection(struct ccnd_handle *h, int fd,
         face->addrlen = e->extsize;
 	/*add by Fumiya*/
 	face->amount_size_of_guarantee = 0;
-	face->send_size_of_guarantee = 0;
-	face->number_of_default_queue = 0;
-	face->number_of_guarantee_queue = 0;
+	face->size_of_guarantee_per_second = 0;
 
 	face->bandwidth_g = 0;
 	face->bandwidth_f = 20000000;
@@ -2319,18 +2317,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
-        char s[50];
-        strcpy(s,flatname->buf);
-        for(i = 0;i<10;i++){
-            if(face->content_names[i][1] == NULL || face->content_names[i][1] == '\0'){
-                strcpy(face->content_names[i],s);
-                face->g_contents++;
-                break;
-            }
-            if(strcmp(face->content_names[i],s)==0){
-                break;
-            }
-        }
         q = face->g_queue;
     }else{
         if(strstr(flatname->buf,"DEFAULT")!=NULL){
@@ -2351,6 +2337,8 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     n = q->send_queue->n;
     if(content->control == GUARANTEE){
+        face->amount_size_of_guarantee += content->size * 8;
+        face->size_of_guarantee_per_second += content->size * 8;
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
     }else {
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
