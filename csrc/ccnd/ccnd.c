@@ -5338,7 +5338,6 @@ content_tree_trim(struct ccnd_handle *h) {
         //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
         if(c->refs == 0 && c->control != GUARANTEE){
             content_dequeuex(h, c);
-            ccnd_msg(h,"5351 remove");
             remove_content(h, c);
             if (h->content_tree->n <= h->capacity)
                 return;
