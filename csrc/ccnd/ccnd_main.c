@@ -80,6 +80,11 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        f->bandwidth_g = f->size_of_guarantee_per_second * 8;
 	        if (f->bandwidth_g > 9000000)
                 f->bandwidth_g = 9000000;
+	        else if (f->size_of_guarantee_per_second * 8 - f->send_g_amount >= 1000000)
+	            f->bandwidth_g += 3000000;
+
+            if (f->bandwidth_g > 9000000)
+                f->bandwidth_g = 9000000;
 	        f->size_of_guarantee_per_second = 0;
 	        //bandwidth_f : 固定値
 	        f->bandwidth_f = 20000000;
