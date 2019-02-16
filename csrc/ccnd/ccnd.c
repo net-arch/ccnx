@@ -484,7 +484,8 @@ content_queue_destroy(struct ccnd_handle *h, struct content_queue **pq)
     struct ccn_indexbuf *x;
     struct content_entry *c;
     int i;
-    
+
+    ccnd_msg(h,"このセクション？");
     if (*pq != NULL) {
         q = *pq;
         s = q->send_queue;
@@ -750,8 +751,7 @@ finalize_face(struct hashtb_enumerator *e)
         }
         for (c = 0; c < CCN_CQ_N; c++)
             content_queue_destroy(h, &(face->q[c]));
-//        for (c = 0; c < QOS_QUEUE; c++)
-//            content_queue_destroy(h, &(face->qos_q[c]));
+
         content_queue_destroy(h,&(face->g_queueG001));
         content_queue_destroy(h,&(face->g_queueG002));
         content_queue_destroy(h,&(face->g_queueG003));
@@ -759,8 +759,7 @@ finalize_face(struct hashtb_enumerator *e)
         content_queue_destroy(h,&(face->d_queue));
         ccn_charbuf_destroy(&face->inbuf);
         ccn_charbuf_destroy(&face->outbuf);
-//        for (c = 0; c< 100 ;c++)
-//            ccn_charbuf_destroy(&face->gList[c]->content_name);
+
         ccnd_msg(h, "%s face id %u (slot %u)",
             recycle ? "recycling" : "releasing",
             face->faceid, face->faceid & MAXFACES);
