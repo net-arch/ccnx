@@ -77,19 +77,29 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (f->g_queue[0] != NULL && f->g_queue[1] != NULL && f->g_queue[2] != NULL) {
                 ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
                 int i;
+                int tmp;
                 for (i = 0; i<3 ;i++){
-                    f->g_queue[i]->bw = f->g_queue[i]->size_of_guarantee_per_second * 8;
-                    f->g_queue[i]->size_of_guarantee_per_second = 0;
-                    if (f->g_queue[i]->bw > 0 && f->g_queue[i]->bw < 3000000){
+                    tmp = f->g_queue[i]->bw;
+                    if (tmp == 0 && f->g_queue[i]->size_of_guarantee_per_second * 8 > 0){
                         f->g_queue[i]->bw = 3000000;
                     }
+                    if (tmp == 3000000 && f->g_queue[i]->size_of_guarantee_per_second * 8 < 1000000){
+                        f->g_queue[i]->bw = 0;
+                    }
+                    if (tmp == 6000000 && f->g_queue[i]->size_of_guarantee_per_second * 8 < 4000000){
+                        f->g_queue[i]->bw = 3000000;
+                    }
+                    if (tmp == 9000000 && f->g_queue[i]->size_of_guarantee_per_second * 8 < 4000000){
+                        f->g_queue[i]->bw = 6000000;
+                    }
+                    f->g_queue[i]->size_of_guarantee_per_second = 0;
                 }
                 f->bandwidth_g = f->g_queue[0]->bw + f->g_queue[1]->bw + f->g_queue[2]->bw;
                 for (i = 0; i<3 ;i++){
-//                    if (f->bandwidth_g < 9000000 && f->g_queue[i]->send_g_whit_be > 1000000){
-//                        f->g_queue[i]->bw += 3000000;
-//                        f->bandwidth_g += 3000000;
-//                    }
+                    if (f->bandwidth_g < 9000000 && f->g_queue[i]->send_g_whit_be > 1000000){
+                        f->g_queue[i]->bw += 3000000;
+                        f->bandwidth_g += 3000000;
+                    }
                     f->g_queue[i]->use_flag = 0;
                     f->g_queue[i]->send_g = 0;
                     f->g_queue[i]->send_g_whit_be = 0;

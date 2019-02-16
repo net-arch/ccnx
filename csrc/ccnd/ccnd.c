@@ -5124,7 +5124,6 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
                 if (!s_ok && is_stale(h, content)) {
                     next = content_next(h, content);
                     if (content->refs == 0) {
-                        ccnd_msg(h,"5105 remove");
                         remove_content(h, content);
                     }
                     else
