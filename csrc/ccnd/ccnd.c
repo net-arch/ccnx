@@ -2315,17 +2315,17 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (face->g_queueG001 == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queueG001 = content_queue_create(h, face, c);
-        ccn_charbuf__append_string(face->g_queueG001->content_name,"g001");
+        ccn_charbuf_append_string(face->g_queueG001->content_name,"g001");
     }
     if (face->g_queueG002 == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queueG002 = content_queue_create(h, face, c);
-        ccn_charbuf__append_string(face->g_queueG002->content_name,"g002");
+        ccn_charbuf_append_string(face->g_queueG002->content_name,"g002");
     }
     if (face->g_queueG003 == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queueG003 = content_queue_create(h, face, c);
-        ccn_charbuf__append_string(face->g_queueG003->content_name,"g003");
+        ccn_charbuf_append_string(face->g_queueG003->content_name,"g003");
     }
     if (face->d_queue == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
