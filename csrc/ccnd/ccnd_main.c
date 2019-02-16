@@ -75,7 +75,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 	            continue;
 	        f = h->faces_by_faceid[i];
 ////            ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
-//            ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
+            ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
 //            //bandwidth_g : 一秒間に届いたDATAの分こじ開ける（上限9Mbps）
 //            int i;
 //            for (i = 0; i<3 ;i++){
