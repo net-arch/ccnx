@@ -257,7 +257,6 @@ struct content_queue {
     struct ccn_scheduled_event *sender;
 
     //add by Fumiya
-    char *G_con_name;
     int amount_size_of_guarantee; //永続
     int size_of_guarantee_per_second; //一秒間で初期化
     int bw;
