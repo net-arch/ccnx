@@ -2316,6 +2316,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (face->g_queue[0] == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queue[0] = content_queue_create(h, face, c);
+        ccnd_msg(h,"ここはどうなんp");
         char *s = "g001";
         ccn_charbuf_append_string(face->g_queue[0]->content_name,s);
     }
