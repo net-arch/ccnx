@@ -436,7 +436,6 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
     unsigned usec;
     q = calloc(1, sizeof(*q));
     if (q != NULL) {
-        ccnd_msg(h,"content_queue_create?");
         //usec = choose_face_delay(h, face, c)a;
 	usec = 1;
         q->burst_nsec = (usec <= 500 ? 500 : 150000); // XXX - needs a knob
@@ -486,7 +485,6 @@ content_queue_destroy(struct ccnd_handle *h, struct content_queue **pq)
     struct content_entry *c;
     int i;
 
-    ccnd_msg(h,"このセクション？");
     if (*pq != NULL) {
         q = *pq;
         s = q->send_queue;
@@ -1620,8 +1618,6 @@ record_connection(struct ccnd_handle *h, int fd,
     int res;
     struct face *face = NULL;
     unsigned char *addrspace;
-
-    ccnd_msg(h,"record_connection?");
     
     res = fcntl(fd, F_SETFL, O_NONBLOCK);
     if (res == -1)
