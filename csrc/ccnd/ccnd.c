@@ -755,6 +755,7 @@ finalize_face(struct hashtb_enumerator *e)
         content_queue_destroy(h,&(face->g_queueG001));
         content_queue_destroy(h,&(face->g_queueG002));
         content_queue_destroy(h,&(face->g_queueG003));
+        content_queue_destroy(h,&(face->system_queue));
         content_queue_destroy(h,&(face->d_queue));
         ccn_charbuf_destroy(&face->inbuf);
         ccn_charbuf_destroy(&face->outbuf);
