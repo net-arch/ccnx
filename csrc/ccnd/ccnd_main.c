@@ -74,8 +74,8 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
-	        if (f->g_queue[0] != NULL) {
-	            ccnd_msg(h,"%d",f->g_queue[0]->bw);
+	        if (f->g_queue[0] != NULL && f->g_queue[1] != NULL && f->g_queue[2] != NULL) {
+                ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
 	        }
 ////            ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
 //            ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
