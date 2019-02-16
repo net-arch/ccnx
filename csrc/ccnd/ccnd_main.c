@@ -74,27 +74,27 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
-//            ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
-            ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
-            //bandwidth_g : 一秒間に届いたDATAの分こじ開ける（上限9Mbps）
-            int i;
-            for (i = 0; i<3 ;i++){
-                f->g_queue[i]->bw = f->g_queue[i]->size_of_guarantee_per_second * 8;
-                f->g_queue[i]->size_of_guarantee_per_second = 0;
-                if (f->g_queue[i]->bw > 0 && f->g_queue[i]->bw < 3000000){
-                    f->g_queue[i]->bw = 3000000;
-                }
-            }
-	        f->bandwidth_g = f->g_queue[0]->bw + f->g_queue[1]->bw + f->g_queue[2]->bw;
-            for (i = 0; i<3 ;i++){
-                if (f->bandwidth_g < 9000000 && f->g_queue[i]->send_g_whit_be > 1000000){
-                    f->g_queue[i]->bw += 3000000;
-                    f->bandwidth_g += 3000000;
-                }
-                f->g_queue[i]->use_flag = 0;
-                f->g_queue[i]->send_g = 0;
-                f->g_queue[i]->send_g_whit_be = 0;
-            }
+////            ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
+//            ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
+//            //bandwidth_g : 一秒間に届いたDATAの分こじ開ける（上限9Mbps）
+//            int i;
+//            for (i = 0; i<3 ;i++){
+//                f->g_queue[i]->bw = f->g_queue[i]->size_of_guarantee_per_second * 8;
+//                f->g_queue[i]->size_of_guarantee_per_second = 0;
+//                if (f->g_queue[i]->bw > 0 && f->g_queue[i]->bw < 3000000){
+//                    f->g_queue[i]->bw = 3000000;
+//                }
+//            }
+//	        f->bandwidth_g = f->g_queue[0]->bw + f->g_queue[1]->bw + f->g_queue[2]->bw;
+//            for (i = 0; i<3 ;i++){
+//                if (f->bandwidth_g < 9000000 && f->g_queue[i]->send_g_whit_be > 1000000){
+//                    f->g_queue[i]->bw += 3000000;
+//                    f->bandwidth_g += 3000000;
+//                }
+//                f->g_queue[i]->use_flag = 0;
+//                f->g_queue[i]->send_g = 0;
+//                f->g_queue[i]->send_g_whit_be = 0;
+//            }
 
 	        f->size_of_guarantee_per_second = 0;
 	        //bandwidth_f : 固定値
@@ -124,8 +124,8 @@ main(int argc, char **argv)
     struct ccnd_handle *h;
     
     /*add by Fumiya for adaptive bandwidth control*/
-//    int bw_thread;
-//    pthread_t thread8;
+    int bw_thread;
+    pthread_t thread8;
     /*add by Fumiya for adaptive bandwidth control*/
 
     if (argc > 1) {
@@ -136,7 +136,7 @@ main(int argc, char **argv)
     h = ccnd_create(argv[0], stdiologger, stderr);
     
     /*add by Fumiya for adaptive bandwidth control*/
-//    bw_thread = pthread_create(&thread8, NULL, (void *)&bandwidth_calculation, h);
+    bw_thread = pthread_create(&thread8, NULL, (void *)&bandwidth_calculation, h);
     /*add by Fumiya for adaptive bandwidth control*/
 
     if (h == NULL)
