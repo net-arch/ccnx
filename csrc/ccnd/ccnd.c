@@ -2192,17 +2192,17 @@ content_sender_qos(struct ccn_schedule *sched,
             if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
                 break;
             }
-            if (q->bw == 0 && q->use_flag = 0) {
+            if (q->bw == 0 && q->use_flag == 0) {
                 face->sending_status += 1;
                 q->use_flag = 1;
             }else{
-                if (q->ready == 0 && q->use_flag = 0){
+                if (q->ready == 0 && q->use_flag == 0){
                     face->sending_status += 1;
                     q->use_flag = 1;
                 }
             }
             //上の条件はクリアしたけどgが最大まで来ている→通常モード
-            if (content->control == GUARANTEE && q->send_g + content->size * 8 >= q->bw && face->sending_status != 3 && q->use_flag = 0) {
+            if (content->control == GUARANTEE && q->send_g + content->size * 8 >= q->bw && face->sending_status != 3 && q->use_flag == 0) {
                 face->sending_status += 1;
                 q->use_flag = 1;
             }
@@ -2315,17 +2315,17 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     if (face->g_queueG001 == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queueG001 = content_queue_create(h, face, c);
-        face->g_queueG001->G_con_name = "g001"
+        face->g_queueG001->G_con_name = "g001";
     }
     if (face->g_queueG002 == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queueG002 = content_queue_create(h, face, c);
-        face->g_queueG002->G_con_name = "g002"
+        face->g_queueG002->G_con_name = "g002";
     }
     if (face->g_queueG003 == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queueG003 = content_queue_create(h, face, c);
-        face->g_queueG003->G_con_name = "g003"
+        face->g_queueG003->G_con_name = "g003";
     }
     if (face->d_queue == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
