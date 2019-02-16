@@ -86,10 +86,10 @@ bandwidth_calculation(struct ccnd_handle *h){
                 }
                 f->bandwidth_g = f->g_queue[0]->bw + f->g_queue[1]->bw + f->g_queue[2]->bw;
                 for (i = 0; i<3 ;i++){
-                    if (f->bandwidth_g < 9000000 && f->g_queue[i]->send_g_whit_be > 1000000){
-                        f->g_queue[i]->bw += 3000000;
-                        f->bandwidth_g += 3000000;
-                    }
+//                    if (f->bandwidth_g < 9000000 && f->g_queue[i]->send_g_whit_be > 1000000){
+//                        f->g_queue[i]->bw += 3000000;
+//                        f->bandwidth_g += 3000000;
+//                    }
                     f->g_queue[i]->use_flag = 0;
                     f->g_queue[i]->send_g = 0;
                     f->g_queue[i]->send_g_whit_be = 0;
