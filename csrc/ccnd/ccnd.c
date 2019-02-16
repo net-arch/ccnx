@@ -752,10 +752,8 @@ finalize_face(struct hashtb_enumerator *e)
         }
         for (c = 0; c < CCN_CQ_N; c++)
             content_queue_destroy(h, &(face->q[c]));
-
-        content_queue_destroy(h,&(face->g_queueG001));
-        content_queue_destroy(h,&(face->g_queueG002));
-        content_queue_destroy(h,&(face->g_queueG003));
+        for (c = 0; c < 3; c++)
+            content_queue_destroy(h, &(face->g_queue[c]));
         content_queue_destroy(h,&(face->system_queue));
         content_queue_destroy(h,&(face->d_queue));
         ccn_charbuf_destroy(&face->inbuf);
@@ -2315,20 +2313,20 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     enum cq_delay_class c;
 
     //queueがまだなかった場合の処理
-    if (face->g_queueG001 == NULL){
+    if (face->g_queue[0] == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
-        face->g_queueG001 = content_queue_create(h, face, c);
-        ccn_charbuf_append_string(face->g_queueG001->content_name,"g001");
+        face->g_queue[0] = content_queue_create(h, face, c);
+        ccn_charbuf_append_string(face->g_queue[0]->content_name,"g001");
     }
-    if (face->g_queueG002 == NULL){
+    if (face->g_queue[1] == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
-        face->g_queueG002 = content_queue_create(h, face, c);
-        ccn_charbuf_append_string(face->g_queueG002->content_name,"g002");
+        face->g_queue[1] = content_queue_create(h, face, c);
+        ccn_charbuf_append_string(face->g_queue[1]->content_name,"g002");
     }
-    if (face->g_queueG003 == NULL){
+    if (face->g_queue[2] == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
-        face->g_queueG003 = content_queue_create(h, face, c);
-        ccn_charbuf_append_string(face->g_queueG003->content_name,"g003");
+        face->g_queue[2] = content_queue_create(h, face, c);
+        ccn_charbuf_append_string(face->g_queue[2]->content_name,"g003");
     }
     if (face->d_queue == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
@@ -2341,13 +2339,14 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
-        if(strstr(flatname->buf,face->g_queueG001->content_name->buf)!=NULL){
-            q = face->g_queueG001;
-        }else if(strstr(flatname->buf,face->g_queueG002->content_name->buf)!=NULL){
-            q = face->g_queueG002;
-        }else if(strstr(flatname->buf,face->g_queueG003->content_name->buf)!=NULL){
-            q = face->g_queueG003;
-        }
+//        if(strstr(flatname->buf,face->g_queueG001->content_name->buf)!=NULL){
+//            q = face->g_queueG001;
+//        }else if(strstr(flatname->buf,face->g_queueG002->content_name->buf)!=NULL){
+//            q = face->g_queueG002;
+//        }else if(strstr(flatname->buf,face->g_queueG003->content_name->buf)!=NULL){
+//            q = face->g_queueG003;
+//        }
+        q = face->g_queue[0];
     }else{
         if(strstr(flatname->buf,"DEFAULT")!=NULL){
             q = face->d_queue;
@@ -7052,10 +7051,10 @@ ccnd_destroy(struct ccnd_handle **pccnd)
             ccnd_meter_destroy(&h->face0->meter[i]);
 //        for (i = 0; i< 100 ;i++)
 //            ccn_charbuf_destroy(&h->face0->gList[i]->content_name);
-        content_queue_destroy(h,&(h->face0->g_queueG001));
-        content_queue_destroy(h,&(h->face0->g_queueG002));
-        content_queue_destroy(h,&(h->face0->g_queueG003));
+        for (i = 0; i < 3 ; i++)
+            content_queue_destroy(h,&(h->face0->g_queue[i]));
         content_queue_destroy(h,&(h->face0->d_queue));
+        content_queue_destroy(h,&(h->face0->system_queue));
         free(h->face0);
         h->face0 = NULL;
     }

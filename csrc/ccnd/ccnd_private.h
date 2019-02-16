@@ -334,9 +334,7 @@ struct face {
     int amount_size_of_guarantee; //永続
     int size_of_guarantee_per_second; //一秒間で初期化
 
-    struct content_queue *g_queueG001;
-    struct content_queue *g_queueG002;
-    struct content_queue *g_queueG003;
+    struct content_queue *g_queue[3];
     struct content_queue *d_queue;
     struct content_queue *system_queue;
 
