@@ -436,6 +436,7 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
     unsigned usec;
     q = calloc(1, sizeof(*q));
     if (q != NULL) {
+        ccnd_msg(h,"content_queue_create?");
         //usec = choose_face_delay(h, face, c)a;
 	usec = 1;
         q->burst_nsec = (usec <= 500 ? 500 : 150000); // XXX - needs a knob
