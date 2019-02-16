@@ -1622,6 +1622,8 @@ record_connection(struct ccnd_handle *h, int fd,
     int res;
     struct face *face = NULL;
     unsigned char *addrspace;
+
+    ccnd_msg(h,"record_connection?");
     
     res = fcntl(fd, F_SETFL, O_NONBLOCK);
     if (res == -1)
