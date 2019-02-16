@@ -74,17 +74,46 @@ bandwidth_calculation(struct ccnd_handle *h){
 	        if (h->faces_by_faceid[i] == NULL)
 	            continue;
 	        f = h->faces_by_faceid[i];
-//            if (f->send_d_amount > 0 || f->send_g_amount >0)
-                ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
+            ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
             //bandwidth_g : 一秒間に届いたDATAの分こじ開ける（上限9Mbps）
-	        f->bandwidth_g = f->size_of_guarantee_per_second * 8;
-	        if (f->bandwidth_g > 9000000)
-                f->bandwidth_g = 9000000;
-	        else if (f->size_of_guarantee_per_second * 8 - f->send_g_amount >= 1000000)
-	            f->bandwidth_g += 3000000;
+            f->g_queueG001->bw = f->g_queueG001->size_of_guarantee_per_second * 8;
+            f->g_queueG002->bw = f->g_queueG002->size_of_guarantee_per_second * 8;
+            f->g_queueG003->bw = f->g_queueG003->size_of_guarantee_per_second * 8;
+            f->g_queueG001->size_of_guarantee_per_second = 0;
+            f->g_queueG002->size_of_guarantee_per_second = 0;
+            f->g_queueG003->size_of_guarantee_per_second = 0;
+            if (f->g_queueG001->bw > 0 && f->g_queueG001->bw < 3000000){
+                f->g_queueG001->bw = 3000000;
+            }
+            if (f->g_queueG002->bw > 0 && f->g_queueG002->bw < 3000000){
+                f->g_queueG002->bw = 3000000;
+            }
+            if (f->g_queueG003->bw > 0 && f->g_queueG003->bw < 3000000){
+                f->g_queueG003->bw = 3000000;
+            }
+	        f->bandwidth_g = f->g_queueG001->bw + f->g_queueG002->bw + f->g_queueG003->bw;
+            if (f->bandwidth_g < 9000000 && f->g_queueG001->send_g_whit_be > 1000000){
+                f->g_queueG001->bw += 3000000;
+                f->bandwidth_g += 3000000;
+            }
+            if (f->bandwidth_g < 9000000 && f->g_queueG002->send_g_whit_be > 1000000){
+                f->g_queueG002->bw += 3000000;
+                f->bandwidth_g += 3000000;
+            }
+            if (f->bandwidth_g < 9000000 && f->g_queueG003->send_g_whit_be > 1000000){
+                f->g_queueG003->bw += 3000000;
+                f->bandwidth_g += 3000000;
+            }
+            f->g_queueG001->use_flag = 0;
+            f->g_queueG002->use_flag = 0;
+            f->g_queueG003->use_flag = 0;
+            f->g_queueG001->send_g = 0;
+            f->g_queueG002->send_g = 0;
+            f->g_queueG003->send_g = 0;
+            f->g_queueG001->send_g_whit_be = 0;
+            f->g_queueG002->send_g_whit_be = 0;
+            f->g_queueG003->send_g_whit_be = 0;
 
-            if (f->bandwidth_g > 9000000)
-                f->bandwidth_g = 9000000;
 	        f->size_of_guarantee_per_second = 0;
 	        //bandwidth_f : 固定値
 	        f->bandwidth_f = 20000000;

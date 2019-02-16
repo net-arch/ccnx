@@ -257,13 +257,15 @@ struct content_queue {
     struct ccn_scheduled_event *sender;
 
     //add by Fumiya
+    unsigned char G_con_name[24];
+    int amount_size_of_guarantee; //永続
+    int size_of_guarantee_per_second; //一秒間で初期化
+    int bw;
+    int send_g;
+    int send_g_whit_be;
     struct ccn_charbuf *content_name;
     enum queue_class queue_type;
-//    int bandwidth_of_face;
-    int bandwidth;
-    int remaining_bandwidth;
     struct timeval last_use;
-    int bw_flag;
     int use_flag;
     //add by Fumiya End
 };
@@ -333,7 +335,9 @@ struct face {
     int amount_size_of_guarantee; //永続
     int size_of_guarantee_per_second; //一秒間で初期化
 
-    struct content_queue *g_queue;
+    struct content_queue *g_queueG001;
+    struct content_queue *g_queueG002;
+    struct content_queue *g_queueG003;
     struct content_queue *d_queue;
     struct content_queue *system_queue;
 

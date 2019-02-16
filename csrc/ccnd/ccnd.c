@@ -445,14 +445,16 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
         q->send_queue = ccn_indexbuf_create();
         q->control_queue = ccn_indexbuf_create();
 	//add by Fumiya
-	q->content_name = ccn_charbuf_create();
-	q->bandwidth = 10000000;
-        q->remaining_bandwidth = q->bandwidth;
+	    q->content_name = ccn_charbuf_create();
+	    q->bw = 0;
+	    q->send_g = 0;
+	    q->send_g_whit_be = 0;
+	    q->size_of_guarantee_per_second = 0;
+	    q->amount_size_of_guarantee = 0;
         struct timeval create;
         gettimeofday(&create,NULL);
         q->last_use = create;
-	q->bw_flag = 0;
-	q->use_flag = 1;
+        q->use_flag = 0;
 	//add by Fumiya End
 	if (q->send_queue == NULL) {
             free(q);
@@ -750,7 +752,9 @@ finalize_face(struct hashtb_enumerator *e)
             content_queue_destroy(h, &(face->q[c]));
 //        for (c = 0; c < QOS_QUEUE; c++)
 //            content_queue_destroy(h, &(face->qos_q[c]));
-        content_queue_destroy(h,&(face->g_queue));
+        content_queue_destroy(h,&(face->g_queueG001));
+        content_queue_destroy(h,&(face->g_queueG002));
+        content_queue_destroy(h,&(face->g_queueG003));
         content_queue_destroy(h,&(face->d_queue));
         ccn_charbuf_destroy(&face->inbuf);
         ccn_charbuf_destroy(&face->outbuf);
@@ -2188,23 +2192,26 @@ content_sender_qos(struct ccn_schedule *sched,
             if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
                 break;
             }
-            //全体の帯域幅の限界は迎えていない&&gの帯域幅が設定されていないときはgがないということなので通常モード
-            if (face->bandwidth_g == 0) {
-                face->sending_status = 1;
+            if (q->bw == 0 && q->use_flag = 0) {
+                face->sending_status += 1;
+                q->use_flag = 1;
             }else{
-                if (face->g_queue->ready == 0){
-                    face->sending_status = 1;
+                if (q->ready == 0 && q->use_flag = 0){
+                    face->sending_status += 1;
+                    q->use_flag = 1;
                 }
             }
             //上の条件はクリアしたけどgが最大まで来ている→通常モード
-            if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g && face->sending_status == 0) {
-                face->sending_status = 1;
+            if (content->control == GUARANTEE && q->send_g + content->size * 8 >= q->bw && face->sending_status != 3 && q->use_flag = 0) {
+                face->sending_status += 1;
+                q->use_flag = 1;
             }
 
-            if (face->sending_status == 0) {
+            if (face->sending_status != 3 && q->use_flag = 0) {
                 if (content->control == GUARANTEE) {
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
+                    q->send_g += content->size * 8;
                     content->refs--;
                     /* face may have vanished, bail out if it did */
                     if (face_from_faceid(h, faceid) == NULL)
@@ -2214,10 +2221,11 @@ content_sender_qos(struct ccn_schedule *sched,
                 }else{
                     break;
                 }
-            }else{
+            }else if (face->sending_status == 3){
                 if(content->control == GUARANTEE){
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
+                    q->send_g_whit_be += content->size * 8;
                     content->refs--;
                     /* face may have vanished, bail out if it did */
                     if (face_from_faceid(h, faceid) == NULL)
@@ -2234,6 +2242,8 @@ content_sender_qos(struct ccn_schedule *sched,
                     nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
                     q->nrun++;
                 }
+            }else{
+                break;
             }
         }
     }
@@ -2302,9 +2312,20 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     enum cq_delay_class c;
 
     //queueがまだなかった場合の処理
-    if (face->g_queue == NULL){
+    if (face->g_queueG001 == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
-        face->g_queue = content_queue_create(h, face, c);
+        face->g_queueG001 = content_queue_create(h, face, c);
+        face->g_queueG001->G_con_name = "g001"
+    }
+    if (face->g_queueG002 == NULL){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->g_queueG002 = content_queue_create(h, face, c);
+        face->g_queueG002->G_con_name = "g002"
+    }
+    if (face->g_queueG003 == NULL){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->g_queueG003 = content_queue_create(h, face, c);
+        face->g_queueG003->G_con_name = "g003"
     }
     if (face->d_queue == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
@@ -2317,7 +2338,13 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
-        q = face->g_queue;
+        if(strstr(flatname->buf,face->g_queueG001->G_con_name)!=NULL){
+            q = face->g_queueG001;
+        }else if(strstr(flatname->buf,face->g_queueG002->G_con_name)!=NULL){
+            q = face->g_queueG002;
+        }else if(strstr(flatname->buf,face->g_queueG003->G_con_name)!=NULL){
+            q = face->g_queueG003;
+        }
     }else{
         if(strstr(flatname->buf,"DEFAULT")!=NULL){
             q = face->d_queue;
@@ -2337,6 +2364,8 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     n = q->send_queue->n;
     if(content->control == GUARANTEE){
+        q->amount_size_of_guarantee += content->size * 8;
+        q->size_of_guarantee_per_second += content->size * 8;
         face->amount_size_of_guarantee += content->size * 8;
         face->size_of_guarantee_per_second += content->size * 8;
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
@@ -7020,7 +7049,9 @@ ccnd_destroy(struct ccnd_handle **pccnd)
             ccnd_meter_destroy(&h->face0->meter[i]);
 //        for (i = 0; i< 100 ;i++)
 //            ccn_charbuf_destroy(&h->face0->gList[i]->content_name);
-        content_queue_destroy(h,&(h->face0->g_queue));
+        content_queue_destroy(h,&(h->face0->g_queueG001));
+        content_queue_destroy(h,&(h->face0->g_queueG002));
+        content_queue_destroy(h,&(h->face0->g_queueG003));
         content_queue_destroy(h,&(h->face0->d_queue));
         free(h->face0);
         h->face0 = NULL;
