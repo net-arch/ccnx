@@ -78,6 +78,7 @@ bandwidth_calculation(struct ccnd_handle *h){
                 ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
                 int i;
                 int tmp;
+                int bw_amount;
                 for (i = 0; i<3 ;i++){
                     tmp = f->g_queue[i]->bw;
                     if (tmp == 0 && f->g_queue[i]->size_of_guarantee_per_second * 8 > 0){
@@ -93,6 +94,9 @@ bandwidth_calculation(struct ccnd_handle *h){
                         f->g_queue[i]->bw = 6000000;
                     }
                     f->g_queue[i]->size_of_guarantee_per_second = 0;
+                    bw_amount += f->g_queue[i]->bw;
+                    if (bw_amount == 9000000)
+                        break;a
                 }
                 f->bandwidth_g = f->g_queue[0]->bw + f->g_queue[1]->bw + f->g_queue[2]->bw;
                 for (i = 0; i<3 ;i++){
