@@ -76,11 +76,13 @@ bandwidth_calculation(struct ccnd_handle *h){
 				if (noc == 0) {
 					noc = 1;
 				}
-				nbw = (double)acios / noc * 3000000;
-				if (nbw >= 3000000) {
+				nbw = (double)acios / noc * f->g_queue[i]->guaranteeBandwidth;
+				if (nbw >= f->g_queue[i]->guaranteeBandwidth) {
 					f->g_queue[i]->bandwidth = (int)nbw;
+				} else if (nbw >= f->g_queue[i]->maxGuaranteebandwidth) {
+					f->g_queue[i]->bandwidth = f->g_queue[i]->maxGuaranteebandwidth;
 				} else {
-					f->g_queue[i]->bandwidth = 3000000;
+					f->g_queue[i]->bandwidth = f->g_queue[i]->guaranteeBandwidth;
 				}
 				ccnd_msg(h,"noc:%d,  acios:%d,  bw%d", f->g_queue[i]->NumberOfChunks, f->g_queue[i]->arrivedChunksInOneSecond, f->g_queue[i]->bandwidth);
 			}
