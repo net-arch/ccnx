@@ -51,22 +51,13 @@ bandwidth_calculation(struct ccnd_handle *h){
 	struct timeval time_last_1sec={0}; //一秒集計用のtimeval
     struct timeval time_last_2sec={0};
 	int k = 0;
-
     unsigned i;
-    int j;
-    int n;
     struct face *f;
     struct content_queue *q;
     
-    double bw_of_g;
-    int bw_of_face;
-    int bw_amount;
 
     while(k<100000000000000){
 	gettimeofday(&tv,NULL);
-	//最終更新時間から1秒が経過していた時
-	//mainでやりたいことは, 　arriveのamount分帯域をこじ開けること
-	//arriveを初期化すること
 	if((tv.tv_sec - time_last_1sec.tv_sec) >= 1){
 	    time_last_1sec = tv;
 
@@ -75,54 +66,33 @@ bandwidth_calculation(struct ccnd_handle *h){
 	            continue;
 	        f = h->faces_by_faceid[i];
 	        if (f->g_queue[0] != NULL && f->g_queue[1] != NULL && f->g_queue[2] != NULL) {
-                ccnd_msg(h,"BW[ G001:%d G002:%d G003:%d ] USE[ G001:%d G002:%d G003:%d ]",f->g_queue[0]->bw,f->g_queue[1]->bw,f->g_queue[2]->bw,f->g_queue[0]->send_g,f->g_queue[1]->send_g,f->g_queue[2]->send_g);
-                ccnd_msg(h,"BE[ G001:%d G002:%d G003:%d ] FLAG [%d]",f->g_queue[0]->send_g_whit_be,f->g_queue[1]->send_g_whit_be,f->g_queue[2]->send_g_whit_be,f->sending_status);
-                int i;
-                int tmp;
-                int bw_amount;
-                for (i = 0; i<3 ;i++){
-                    tmp = f->g_queue[i]->bw;
-                    if (tmp == 0 && f->g_queue[i]->size_of_guarantee_per_second * 8 > 0){
-                        f->g_queue[i]->bw = 3000000;
-                    }
-                    if (tmp == 3000000 && f->g_queue[i]->size_of_guarantee_per_second * 8 < 1000000){
-                        f->g_queue[i]->bw = 0;
-                    }
-//                    if (tmp == 6000000 && f->g_queue[i]->size_of_guarantee_per_second * 8 < 4000000){
-//                        f->g_queue[i]->bw = 3000000;
-//                    }
-//                    if (tmp == 9000000 && f->g_queue[i]->size_of_guarantee_per_second * 8 < 4000000){
-//                        f->g_queue[i]->bw = 6000000;
-//                    }
-                    f->g_queue[i]->size_of_guarantee_per_second = 0;
-                    bw_amount += f->g_queue[i]->bw;
-                    if (bw_amount == 9000000)
-                        break;
-                }
-                f->bandwidth_g = f->g_queue[0]->bw + f->g_queue[1]->bw + f->g_queue[2]->bw;
-                for (i = 0; i<3 ;i++){
-//                    if (f->bandwidth_g < 9000000 && f->g_queue[i]->send_g_whit_be > 1000000){
-//                        f->g_queue[i]->bw += 3000000;
-//                        f->bandwidth_g += 3000000;
-//                    }
-                    f->g_queue[i]->use_flag = 0;
-                    f->g_queue[i]->send_g = 0;
-                    f->g_queue[i]->send_g_whit_be = 0;
-                }
+                	int i;
+			int noc;
+			int acios;
+			int nbw;
+			for (i = 0; i<3 ;i++){
+				noc = f->g_queue[i]->NumberOfChunks;
+				acios = f->g_queue[i]->arrivedChunksInOneSecond;
+				if (noc == 0) {
+					noc = 1;
+				}
+				nbw = acios / noc * 3000000;
+				if (nbw >= 3000000) {
+					f->g_queue[i]->bandwidth = nbw;
+				} else {
+					f->g_queue[i]->bandwidth = 3000000;
+				}
+			}
+			for (i = 0; i<3 ;i++){
+				f->g_queue[i]->arrivedChunksInOneSecond = 0;
+				f->g_queue[i]->use_flag = 1;
+			}
 	        }
-
-	        f->size_of_guarantee_per_second = 0;
-	        //bandwidth_f : 固定値
-	        f->bandwidth_f = 20000000;
-	        //send_g_amount : 0
-	        f->send_g_amount = 0;
-	        //send_d_amount : 0
-	        f->send_d_amount = 0;
-	        //sending_status : 0;
+		f->bandwidth_f = 20000000; //20Mb
 	        f->sending_status = 0;
 	    }
 	}
-}
+    }
 }
 /*add by Fumiya for adaptive bandwidth control*/
 

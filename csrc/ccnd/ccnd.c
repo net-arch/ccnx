@@ -451,6 +451,14 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
 	    q->send_g_whit_be = 0;
 	    q->size_of_guarantee_per_second = 0;
 	    q->amount_size_of_guarantee = 0;
+	//F2G
+	q->size = 0;
+	q->guaranteeBandwidth = 3000000;
+	q->maxGuaranteebandwidth = 9000000;
+	q->NumberOfChunks = 0;
+	q->bandwidth = 0;
+	q->arrivedChunksInOneSecond = 0;
+	//F2G
         struct timeval create;
         gettimeofday(&create,NULL);
         q->last_use = create;
@@ -1636,7 +1644,7 @@ record_connection(struct ccnd_handle *h, int fd,
 	face->bandwidth_f = 20000000;
 	face->send_g_amount = 0;
 	face->send_d_amount = 0;
-	face->sending_status = 3;
+	face->sending_status = 0;
 	/*add by Fumiya*/
         addrspace = ((unsigned char *)e->key) + e->keysize;
         face->addr = (struct sockaddr *)addrspace;
@@ -2137,13 +2145,6 @@ Bail:
     return(0);
 }
 
-/**
- * Scheduled event for sending from a queue.
- * content sender をDRR仕様に書き換える
- * この中では送出するコンテンツ数に限りは設けないで以下の二点で送出を止める
- * ・nsecが一定時間を迎える（一つのキューに時間を取られ過ぎるわけにはいかない）
- * ・送出したコンテンツのサイズが帯域幅を使い尽くす(こうなったらbw_flagを1にする)
- */
 static int
 content_sender_qos(struct ccn_schedule *sched,
                void *clienth,
@@ -2185,70 +2186,49 @@ content_sender_qos(struct ccn_schedule *sched,
         if (content == NULL)
             q->nrun = 0;
         else {
-            //g,dの送信したコンテンツのサイズが帯域幅を超えていたら更新されるまで転送できない
-            if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
-                break;
-            }
-            if (q->bw == 0 && q->use_flag == 0) {
-                face->sending_status += 1;
-                q->use_flag = 1;
-            }else{
-                if (q->ready == 0 && q->use_flag == 0){
-                    face->sending_status += 1;
-                    q->use_flag = 1;
-                }
-            }
-            //上の条件はクリアしたけどgが最大まで来ている→通常モード
-            if (content->control == GUARANTEE && q->send_g + content->size * 8 >= q->bw && face->sending_status != 3 && q->use_flag == 0) {
-                face->sending_status += 1;
-                q->use_flag = 1;
-            }
-            int i;
-            for(i = 0;i<3;i++){
-                if (face->g_queue[i]->use_flag == 0 && face->g_queue[i]->sender == NULL) {
-                    face->g_queue[i]->use_flag = 1;
-                    face->sending_status += 1;
-                }
-            }
-
-            if (face->sending_status < 3 && q->use_flag == 0) {
-                if (content->control == GUARANTEE) {
-                    send_content(h, face, content);
-                    face->send_g_amount += content->size * 8;
-                    q->send_g += content->size * 8;
-                    content->refs--;
-                    /* face may have vanished, bail out if it did */
-                    if (face_from_faceid(h, faceid) == NULL)
-                        goto Bail;
-                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
-                    q->nrun++;
-                }else{
-                    break;
-                }
-            }else if (face->sending_status >= 3){
-                if(content->control == GUARANTEE){
-                    send_content(h, face, content);
-                    face->send_g_amount += content->size * 8;
-                    q->send_g_whit_be += content->size * 8;
-                    content->refs--;
-                    /* face may have vanished, bail out if it did */
-                    if (face_from_faceid(h, faceid) == NULL)
-                        goto Bail;
-                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
-                    q->nrun++;
-                }else{
-                    send_content(h, face, content);
-                    face->send_d_amount += content->size * 8;
-                    content->refs--;
-                    /* face may have vanished, bail out if it did */
-                    if (face_from_faceid(h, faceid) == NULL)
-                        goto Bail;
-                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
-                    q->nrun++;
-                }
-            }else{
-                break;
-            }
+		//F2G
+		if (face->bandwidth_f <= 0) {
+			break;
+		}
+		int i;
+		face->sending_status = 1;
+		for(i = 0;i<3;i++){
+                	if (face->g_queue[i]->use_flag == 1) {
+				face->sending_status = 0;
+                	}
+		}
+		if (face->sending_status == 0) { //not finish send guarantee content
+			if (content->control != GUARANTEE) { // can not send default content
+				break;
+			} else { 
+				if (q->use_flag == 2) { //used priority bandwidth
+					break;
+				}
+				if (q->bandwidth <= 0) {
+					q->use_flag = 2;
+					break;
+				}
+				//TODO:situation of q->ready == 0
+				//not used priotiry bandwidth
+				send_content(h, face, content);
+				q->bandwidth -= content->size * 8;
+				face->bandwidth_f -= content->size * 8;
+				content->refs--;
+				if (face_from_faceid(h, faceid) == NULL)
+                        		goto Bail;
+                   		nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                   		q->nrun++;
+			}
+		} else { //finish send guarantee content
+			send_content(h, face, content);
+			face->bandwidth_f -= content->size * 8;
+			content->refs--;
+                        if (face_from_faceid(h, faceid) == NULL)
+                                goto Bail;
+                        nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                        q->nrun++;
+		}
+		//F2G
         }
     }
     if (q->ready < i) abort();
@@ -2290,7 +2270,6 @@ content_sender_qos(struct ccn_schedule *sched,
             return(delay);
         }
     }
-    //以下は全てのコンテンツを送信し終えた時の場合, 今回の場合, その状況は稀であると考えられるのでこうするわけにはいかない.
     q->send_queue->n = q->ready = 0;
     q->control_queue->n = q->ready = 0;
     Bail:
@@ -2315,7 +2294,6 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     struct g_content_name *name;
     enum cq_delay_class c;
 
-    //queueがまだなかった場合の処理
     if (face->g_queue[0] == NULL){
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->g_queue[0] = content_queue_create(h, face, c);
@@ -2342,8 +2320,7 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
         c = choose_content_delay_class(h, face->faceid, content->flags);
         face->system_queue = content_queue_create(h, face, c);
     }
-    //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
-    //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
+    
     if (content->control == GUARANTEE) {
         if(strstr(flatname->buf,"g001")!=NULL){
             q = face->g_queue[0];
@@ -2371,10 +2348,21 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
 
     n = q->send_queue->n;
     if(content->control == GUARANTEE){
-        q->amount_size_of_guarantee += content->size * 8;
-        q->size_of_guarantee_per_second += content->size * 8;
-        face->amount_size_of_guarantee += content->size * 8;
-        face->size_of_guarantee_per_second += content->size * 8;
+	//F2G
+	if (q->use_flag == 0) {
+		q->use_flag = 1;
+		q->bandwidth = 3000000;
+	}
+	if (q->size != content->size*8) {
+		q->size = content->size*8;
+		q->NumberOfChunks = q->guaranteeBandwidth / q->size + 1;
+	}
+	q->arrivedChunksInOneSecond++;
+	//F2G
+        //q->amount_size_of_guarantee += content->size * 8;
+        //q->size_of_guarantee_per_second += content->size * 8;
+        //face->amount_size_of_guarantee += content->size * 8;
+        //face->size_of_guarantee_per_second += content->size * 8;
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
     }else {
         ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);

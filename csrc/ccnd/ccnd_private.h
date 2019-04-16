@@ -262,11 +262,20 @@ struct content_queue {
     int bw;
     int send_g;
     int send_g_whit_be;
-    struct ccn_charbuf *content_name;
     enum queue_class queue_type;
     struct timeval last_use;
     int use_flag;
     //add by Fumiya End
+
+	//F2G
+	int size;
+	int guaranteeBandwidth;
+	int maxGuaranteebandwidth;
+	int NumberOfChunks;
+	int bandwidth;
+	int arrivedChunksInOneSecond;
+	struct ccn_charbuf *content_name;
+	//F2G
 };
 
 struct g_content_name {
