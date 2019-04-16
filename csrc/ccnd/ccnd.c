@@ -1644,7 +1644,7 @@ record_connection(struct ccnd_handle *h, int fd,
 	face->bandwidth_f = 20000000;
 	face->send_g_amount = 0;
 	face->send_d_amount = 0;
-	face->sending_status = 3;
+	face->sending_status = 0;
 	/*add by Fumiya*/
         addrspace = ((unsigned char *)e->key) + e->keysize;
         face->addr = (struct sockaddr *)addrspace;
