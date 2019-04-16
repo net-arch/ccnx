@@ -77,7 +77,7 @@ bandwidth_calculation(struct ccnd_handle *h){
 					noc = 1;
 				}
 				nbw = (double)acios / noc * f->g_queue[i]->guaranteeBandwidth;
-				if (nbw >= f->g_queue[i]->guaranteeBandwidth) {
+				if (nbw >= f->g_queue[i]->guaranteeBandwidth && nbw <= f->g_queue[i]->maxGuaranteebandwidth) {
 					f->g_queue[i]->bandwidth = (int)nbw;
 				} else if (nbw >= f->g_queue[i]->maxGuaranteebandwidth) {
 					f->g_queue[i]->bandwidth = f->g_queue[i]->maxGuaranteebandwidth;
