@@ -2203,8 +2203,15 @@ content_sender_qos(struct ccn_schedule *sched,
                 face->sending_status += 1;
                 q->use_flag = 1;
             }
+            int i;
+            for(i = 0;i<3;i++){
+                if (face->g_queue[i]->use_flag == 0 && face->g_queue[i]->sender == NULL) {
+                    face->g_queue[i]->use_flag = 1;
+                    face->sending_status += 1;
+                }
+            }
 
-            if (face->sending_status != 3 && q->use_flag == 0) {
+            if (face->sending_status < 3 && q->use_flag == 0) {
                 if (content->control == GUARANTEE) {
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
@@ -2218,7 +2225,7 @@ content_sender_qos(struct ccn_schedule *sched,
                 }else{
                     break;
                 }
-            }else if (face->sending_status == 3){
+            }else if (face->sending_status >= 3){
                 if(content->control == GUARANTEE){
                     send_content(h, face, content);
                     face->send_g_amount += content->size * 8;
@@ -2338,14 +2345,13 @@ face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct conte
     //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
     //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
     if (content->control == GUARANTEE) {
-//        if(strstr(flatname->buf,face->g_queueG001->content_name->buf)!=NULL){
-//            q = face->g_queueG001;
-//        }else if(strstr(flatname->buf,face->g_queueG002->content_name->buf)!=NULL){
-//            q = face->g_queueG002;
-//        }else if(strstr(flatname->buf,face->g_queueG003->content_name->buf)!=NULL){
-//            q = face->g_queueG003;
-//        }
-        q = face->g_queue[0];
+        if(strstr(flatname->buf,"g001")!=NULL){
+            q = face->g_queue[0];
+        }else if(strstr(flatname->buf,"g002")!=NULL){
+            q = face->g_queue[1];
+        }else if(strstr(flatname->buf,"g003")!=NULL){
+            q = face->g_queue[2];
+        }
     }else{
         if(strstr(flatname->buf,"DEFAULT")!=NULL){
             q = face->d_queue;
@@ -5022,7 +5028,7 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
     struct ccn_parsed_interest *pi = &parsed_interest;
     int k;
     int res;
-    int try;
+    int tryy;
     int matched;
     int s_ok;
     struct interest_entry *ie = NULL;
@@ -5120,15 +5126,14 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
                                     msg, size);
                 content = NULL;
             }
-            for (try = 0; content != NULL; try++) {
+            for (tryy = 0; content != NULL; tryy++) {
                 if (!s_ok && is_stale(h, content)) {
                     next = content_next(h, content);
                     if (content->refs == 0) {
-                        ccnd_msg(h,"5105 remove");
                         remove_content(h, content);
                     }
                     else
-                        try--;
+                        tryy--;
                     content = next;
                     goto check_next_prefix;
                 }
@@ -5146,7 +5151,7 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
                 }
                 content = content_next(h, content);
             check_next_prefix:
-                if (try >= CCND_MAX_MATCH_PROBES)
+                if (tryy >= CCND_MAX_MATCH_PROBES)
                     content = NULL;
                 else if (content != NULL &&
                     !content_matches_prefix(h, content, flatname)) {
