@@ -2191,10 +2191,15 @@ content_sender_qos(struct ccn_schedule *sched,
 			break;
 		}
 		int i;
-		face->sending_status = 1;
-		for(i = 0;i<3;i++){
-                	if (face->g_queue[i]->use_flag == 1) {
-				face->sending_status = 0;
+		if (face->sending_status == 0) {
+			face->sending_status = 1;
+                	for(i = 0;i<3;i++){
+                        	if (face->g_queue[i]->use_flag == 1 && face->g_queue[i]->arrivedChunksInOneSecond != 0) {
+                                	face->sending_status = 0;
+                        	}
+                        	if (face->g_queue[i]->ready == 0) {
+                                	face->sending_status = 1;
+                        	}
                 	}
 		}
 		if (face->sending_status == 0) { //not finish send guarantee content

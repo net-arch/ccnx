@@ -69,25 +69,29 @@ bandwidth_calculation(struct ccnd_handle *h){
                 	int i;
 			int noc;
 			int acios;
-			int nbw;
+			double nbw;
 			for (i = 0; i<3 ;i++){
 				noc = f->g_queue[i]->NumberOfChunks;
 				acios = f->g_queue[i]->arrivedChunksInOneSecond;
 				if (noc == 0) {
 					noc = 1;
 				}
-				nbw = acios / noc * 3000000;
+				nbw = (double)acios / noc * 3000000;
 				if (nbw >= 3000000) {
-					f->g_queue[i]->bandwidth = nbw;
+					f->g_queue[i]->bandwidth = (int)nbw;
 				} else {
 					f->g_queue[i]->bandwidth = 3000000;
 				}
+				ccnd_msg(h,"noc:%d,  acios:%d,  bw%d", f->g_queue[i]->NumberOfChunks, f->g_queue[i]->arrivedChunksInOneSecond, f->g_queue[i]->bandwidth);
 			}
 			for (i = 0; i<3 ;i++){
 				f->g_queue[i]->arrivedChunksInOneSecond = 0;
 				f->g_queue[i]->use_flag = 1;
 			}
-	        }
+	        } else {
+			continue;
+		}
+		ccnd_msg(h,"sending_satus:%d   face_bandwidth:%d",f->sending_status, f->bandwidth_f);
 		f->bandwidth_f = 20000000; //20Mb
 	        f->sending_status = 0;
 	    }
