@@ -1,4 +1,5 @@
 /*
+ *
  * ccnd/ccnd.c
  *
  * Main program of ccnd - the CCNx Daemon
@@ -64,6 +65,7 @@
 
 #include "ccnd_private.h"
 
+static struct g_content_name *content_name_create(void);
 static void cleanup_at_exit(void);
 static void unlink_at_exit(const char *path);
 static int create_local_listener(struct ccnd_handle *h, const char *sockname, int backlog);
@@ -83,6 +85,9 @@ static struct face *get_dgram_source(struct ccnd_handle *h, struct face *face,
                                      int why);
 static struct content_entry *content_from_accession(struct ccnd_handle *h,
                                                     ccn_cookie accession);
+static struct content_entry *content_from_accession_qos(struct ccnd_handle *h, 
+                                                        ccn_cookie accession, 
+                                                        enum controlpacketid control);
 static int is_stale(struct ccnd_handle *h, struct content_entry *content);
 static void mark_stale(struct ccnd_handle *h,
                        struct content_entry *content);
@@ -143,8 +148,11 @@ static void strategy_callout(struct ccnd_handle *h,
                              struct interest_entry *ie,
                              enum ccn_strategy_op op,
                              unsigned faceid);
+void
+content_queue_destroy(struct ccnd_handle *h, struct content_queue **pq);
 
 #ifndef CCND_WTHZ
+
 /**
  * Frequency of wrapped timer
  *
@@ -161,7 +169,7 @@ static void strategy_callout(struct ccnd_handle *h,
 /**
  * Allow a few extra entries in the cache to allow for output queuing
  */
-#define CCND_CACHE_MARGIN 10
+#define CCND_CACHE_MARGIN 3
 #endif
 
 #ifndef CCND_MAX_MATCH_PROBES
@@ -394,12 +402,28 @@ choose_face_delay(struct ccnd_handle *h, struct face *face, enum cq_delay_class 
     
     if (c == CCN_CQ_ASAP)
         return(1);
+    /* <!--kuwayama */
+    if (c == CCN_CQ_GUARANTEE)
+      return(CCN_CQ_GUARANTEE);
+    /*  kuwayama--> */
     if ((face->flags & CCN_FACE_MCAST) != 0) {
         shift = (c == CCN_CQ_SLOW) ? 2 : 0;
         micros = (h->data_pause_microsec) << shift;
         return(micros); /* multicast, delay more */
     }
     return(1);
+}
+
+static struct g_content_name * content_name_create(void)
+{
+    struct g_content_name *n;
+    n->content_name = ccn_charbuf_create();
+    n->sending_status = 1;
+    if (n->content_name == NULL){
+        free(n);
+        return (NULL);
+    }
+    return (n);
 }
 
 /**
@@ -412,16 +436,36 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
     unsigned usec;
     q = calloc(1, sizeof(*q));
     if (q != NULL) {
-        usec = choose_face_delay(h, face, c);
+        //usec = choose_face_delay(h, face, c)a;
+	usec = 1;
         q->burst_nsec = (usec <= 500 ? 500 : 150000); // XXX - needs a knob
         q->min_usec = usec;
         q->rand_usec = 2 * usec;
         q->nrun = 0;
         q->send_queue = ccn_indexbuf_create();
-        if (q->send_queue == NULL) {
+        q->control_queue = ccn_indexbuf_create();
+	//add by Fumiya
+	q->content_name = ccn_charbuf_create();
+	q->bandwidth = 10000000;
+        q->remaining_bandwidth = q->bandwidth;
+        struct timeval create;
+        gettimeofday(&create,NULL);
+        q->last_use = create;
+	q->bw_flag = 0;
+	q->use_flag = 1;
+	//add by Fumiya End
+	if (q->send_queue == NULL) {
             free(q);
             return(NULL);
         }
+        if (q->control_queue == NULL) {
+            free(q);
+            return(NULL);
+        }
+	if (q->content_name == NULL) {
+	    free(q);
+	    return(NULL);
+	}
         q->sender = NULL;
     }
     return(q);
@@ -430,29 +474,35 @@ content_queue_create(struct ccnd_handle *h, struct face *face, enum cq_delay_cla
 /**
  * Destroy a queue.
  */
-static void
+void
 content_queue_destroy(struct ccnd_handle *h, struct content_queue **pq)
 {
     struct content_queue *q;
     struct ccn_indexbuf *s;
+    struct ccn_indexbuf *x;
     struct content_entry *c;
     int i;
     
     if (*pq != NULL) {
         q = *pq;
         s = q->send_queue;
+        x = q->control_queue;
+        
         if (s != NULL) {
             for (i = 0; i < s->n; i++) {
-                c = content_from_accession(h, s->buf[i]);
+                c = content_from_accession_qos(h, s->buf[i], x->buf[i]);
                 if (c != NULL)
                     c->refs--;
             }
         }
         ccn_indexbuf_destroy(&q->send_queue);
+        ccn_indexbuf_destroy(&q->control_queue);
         if (q->sender != NULL) {
             ccn_schedule_cancel(h->sched, q->sender);
             q->sender = NULL;
         }
+
+	ccn_charbuf_destroy(&q->content_name);
         free(q);
         *pq = NULL;
     }
@@ -698,8 +748,14 @@ finalize_face(struct hashtb_enumerator *e)
         }
         for (c = 0; c < CCN_CQ_N; c++)
             content_queue_destroy(h, &(face->q[c]));
+        for (c = 0; c < QOS_QUEUE; c++)
+            content_queue_destroy(h, &(face->qos_q[c]));
+        content_queue_destroy(h,&(face->g_queue));
+        content_queue_destroy(h,&(face->d_queue));
         ccn_charbuf_destroy(&face->inbuf);
         ccn_charbuf_destroy(&face->outbuf);
+//        for (c = 0; c< 100 ;c++)
+//            ccn_charbuf_destroy(&face->gList[c]->content_name);
         ccnd_msg(h, "%s face id %u (slot %u)",
             recycle ? "recycling" : "releasing",
             face->faceid, face->faceid & MAXFACES);
@@ -895,12 +951,41 @@ content_from_accession(struct ccnd_handle *h, ccn_cookie accession)
 {
     struct content_entry *ans = NULL;
     struct ccny *y;
-    
+   
+    // modified by xu  
+    // modified by xu for g content store 
     y = ccny_from_cookie(h->content_tree, accession);
+
+    //  -->
     if (y != NULL)
         ans = ccny_payload(y);
     return(ans);
 }
+/**
+ * Convert an accession to its associated content handle.
+ *
+ * @returns content handle, or NULL if it is no longer available.
+ */
+static struct content_entry *
+content_from_accession_qos(struct ccnd_handle *h, ccn_cookie accession, enum controlpacketid control)
+{
+    struct content_entry *ans = NULL;
+    struct ccny *y;
+   
+    // modified by xu  
+    // modified by xu for g content store 
+    if(control == GUARANTEE)
+    y = ccny_from_cookie(h->content_tree_g, accession);
+    else
+    y = ccny_from_cookie(h->content_tree, accession);
+
+
+    //  -->
+    if (y != NULL)
+        ans = ccny_payload(y);
+    return(ans);
+}
+
 
 /**
  * Find the first candidate that might match the given interest.
@@ -939,14 +1024,17 @@ find_first_match_candidate(struct ccnd_handle *h,
                     ccn_flatname_append_from_ccnb(namebuf,
                                                   interest_msg + ex1start,
                                                   ex1end - ex1start, 0, 1);
-//                    if (h->debug & 8)
-//                        ccnd_debug_ccnb(h, __LINE__, "fastex", NULL,
-//                                        namebuf->buf, namebuf->length);
                 }
             }
         }
     }
-    y = ccn_nametree_look_ge(h->content_tree, namebuf->buf, namebuf->length);
+    // modified by xu 
+    // modified by xu for g content store 
+    if (pi->control == GUARANTEE)
+        y = ccn_nametree_look_ge(h->content_tree_g, namebuf->buf, namebuf->length);
+    else
+        y = ccn_nametree_look_ge(h->content_tree, namebuf->buf, namebuf->length);
+    // -->
     charbuf_release(h, namebuf);
     if (y == NULL)
         return(NULL);
@@ -963,8 +1051,13 @@ content_matches_prefix(struct ccnd_handle *h,
 {
     struct ccny *y = NULL;
     int res;
-    
-    y = ccny_from_cookie(h->content_tree, content->accession);
+    // modified by xu for g content store 
+    if(content->control == GUARANTEE)
+        y = ccny_from_cookie(h->content_tree_g, content->accession_g);
+    else
+        y = ccny_from_cookie(h->content_tree, content->accession);
+
+
     res = ccn_flatname_compare(flat->buf, flat->length,
                                ccny_key(y), ccny_keylen(y));
     return (res == CCN_STRICT_PREFIX || res == 0);
@@ -979,7 +1072,15 @@ content_next(struct ccnd_handle *h, struct content_entry *content)
     struct ccny *y = NULL;
     if (content == NULL)
         return(NULL);
-    y = ccny_from_cookie(h->content_tree, content->accession);
+
+
+    // modified by xu for g content store 
+    if(content->control == GUARANTEE)
+        y = ccny_from_cookie(h->content_tree_g, content->accession_g);
+    else
+        y = ccny_from_cookie(h->content_tree, content->accession);
+
+
     if (y == NULL)
         return(NULL);
     y = ccny_next(y);
@@ -1044,14 +1145,22 @@ content_enqueuex(struct ccnd_handle *h, struct content_entry *content)
     int tts;
     
     tts = content->staletime;
-    if (content->nextx != NULL || content->accession == 0 || tts < 0) abort();    
+    if (content->control == GUARANTEE){
+        if(content->nextx != NULL) {
+            ccnd_msg(h, "conent g next != NULL");
+        }
+        
+        if (content->nextx != NULL || content->accession_g == 0 || tts < 0) abort();    
+    }
+    else
+        if (content->nextx != NULL || content->accession == 0 || tts < 0) abort();    
     prev = h->headx->prevx;
     if (prev->staletime > tts) {
         y = ccn_nametree_look_le(h->ex_index, NULL, tts);
         if (y == NULL)
             prev = h->headx;
         else
-            prev = content_from_accession(h, ccny_info(y));
+            prev = content_from_accession_qos(h, ccny_info(y), content->control);
         // if prev is NULL, we forgot to remove an entry
     }
     if (prev->nextx->staletime <= tts && prev->nextx != h->headx) abort();
@@ -1065,10 +1174,21 @@ content_enqueuex(struct ccnd_handle *h, struct content_entry *content)
     content->nextx = next;
     content->prevx = prev;
     next->prevx = prev->nextx = content;
-    if (next != h->headx)
-        update_ex_index(h, content->staletime, content->accession);
-    else if (prev != h->headx && prev->staletime < tts)
-        update_ex_index(h, prev->staletime, prev->accession);
+    if (next != h->headx){
+        if( content->control == GUARANTEE){
+            update_ex_index(h, content->staletime, content->accession_g);
+        }
+        else{
+            update_ex_index(h, content->staletime, content->accession);
+        }
+    }
+    else if (prev != h->headx && prev->staletime < tts){
+       if(prev->control == GUARANTEE){  
+          update_ex_index(h, prev->staletime, prev->accession_g);
+       }else{
+          update_ex_index(h, prev->staletime, prev->accession);
+       }
+   }
 }
 
 /**
@@ -1090,8 +1210,13 @@ content_dequeuex(struct ccnd_handle *h, struct content_entry *content)
     content->nextx = content->prevx = NULL;
     if (content->staletime != next->staletime) {
         /* On average, we get here no more than once per second */
-        if (content->staletime == prev->staletime)
-            update_ex_index(h, prev->staletime, prev->accession);
+        if (content->staletime == prev->staletime){
+            if(prev->control == GUARANTEE){
+                update_ex_index(h, prev->staletime, prev->accession_g);
+            }else{
+                update_ex_index(h, prev->staletime, prev->accession);
+            }
+        }
         else
             update_ex_index(h, content->staletime, 0);
     }
@@ -1127,6 +1252,9 @@ ccnd_n_stale(struct ccnd_handle *h)
         return(0);
     now = h->sec - h->starttime;
     if (p->staletime <= now)
+        // modified by xu for g content store 
+        // todo: here should return summizaiton of content tree (g, n..)
+        //return(h->content_tree->n); /* Everything is stale */
         return(h->content_tree->n); /* Everything is stale */
     /* We know there is an entry with staletime > now, so this terminates. */
     for (p = h->headx->nextx; p->staletime <= now; p = p->nextx)
@@ -1175,11 +1303,11 @@ consume_interest(struct ccnd_handle *h, struct interest_entry *ie)
     struct hashtb_enumerator ee;
     struct hashtb_enumerator *e = &ee;
     int res;
-    
     hashtb_start(h->interest_tab, e);
     res = hashtb_seek(e, ie->interest_msg, ie->size - 1, 1);
-    if (res != HT_OLD_ENTRY)
+    if (res != HT_OLD_ENTRY){
         abort();
+    }
     hashtb_delete(e);
     hashtb_end(e);
 }    
@@ -1394,7 +1522,7 @@ create_local_listener(struct ccnd_handle *h, const char *sockname, int backlog)
     sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock == -1)
         return(sock);
-    savedmask = umask(0111); /* socket should be R/W by anybody */
+    savedmask = umask(0000); /* socket should be R/W by anybody */
     res = bind(sock, (struct sockaddr *)&a, sizeof(a));
     umask(savedmask);
     if (res == -1) {
@@ -1499,6 +1627,18 @@ record_connection(struct ccnd_handle *h, int fd,
         face->recv_fd = fd;
         face->sendface = CCN_NOFACEID;
         face->addrlen = e->extsize;
+	/*add by Fumiya*/
+	face->amount_size_of_guarantee = 0;
+	face->send_size_of_guarantee = 0;
+	face->number_of_default_queue = 0;
+	face->number_of_guarantee_queue = 0;
+
+	face->bandwidth_g = 0;
+	face->bandwidth_f = 20000000;
+	face->send_g_amount = 0;
+	face->send_d_amount = 0;
+	face->sending_status = 1;
+	/*add by Fumiya*/
         addrspace = ((unsigned char *)e->key) + e->keysize;
         face->addr = (struct sockaddr *)addrspace;
         memcpy(addrspace, who, e->extsize);
@@ -1749,6 +1889,74 @@ shutdown_client_fd(struct ccnd_handle *h, int fd)
     check_comm_file(h);
 }
 
+/**<!-- add by xu
+ * Insert Control Packet ID into the Content Object
+ *
+ * if no Control Packet ID in the content object
+ * 
+ * Return the pointer of the new content entry 
+ * if insert sucessfully
+ * or 
+ * return the orginal pointer of content entry
+ * if failed   
+*/
+struct content_entry *
+insert_controlpacketid_contentobject(struct ccnd_handle *h, 
+                                     struct content_entry *content, 
+                                       enum controlpacketid control)
+{
+    if (-1 == content->control || 
+         0 > content->control ||
+         4 <= content->control)
+    {
+        //ccnd_msg(h, "Content Object has no control ID");
+	struct ccn_charbuf *c = ccn_charbuf_create();
+	unsigned char *dst;
+        size_t size;
+        size = content->size;
+	/*Remove the end closer of this ContentObject*/
+        //ccnd_msg(h, "Remove the end closer");
+        dst = ccn_charbuf_reserve(c, size - 1);
+	    memcpy(dst, content->ccnb, size - 1); 
+	    c->length += (size-1);
+
+	    /**Append ControlPacketID
+	     * Here the NOTICE should be dynamic according to real situation
+	    */
+        //ccnd_msg(h, "Append control packet id");
+	    ccnb_tagged_putf(c, CCN_DTAG_ControlPacketID, "%d", control);
+	    /**Append closer */
+        //ccnd_msg(h, "Append closer");
+	    ccnb_element_end(c);
+
+        if (NULL != c->buf){
+            /**Release the original ContentObject memory*/
+	        free(content->ccnb);
+	        /**Assign a new memory with size of c->length*/
+	        content->ccnb = malloc(c->length);
+	        content->size = c->length;
+                content->control = control;
+	        /**Copy the content of c->buf to content->ccnb
+	         * The header addresses of c->buf and content->ccnb are same 
+	        */
+	        content->ccnb = c->buf;
+	        memcpy(content->ccnb, c->buf, c->length);   
+            return (content);
+        }
+        else{
+            free(c);
+            ccnd_msg(h, "ERROR: Insert ControlPacketID Failed");
+            return (content);
+        }
+ 
+    }
+    else{
+        /*The content has already a control packet id*/
+        return (content);
+    }
+}
+/* add by xu end -->*/
+
 /**
  * Send a ContentObject
  *
@@ -1759,15 +1967,24 @@ static void
 send_content(struct ccnd_handle *h, struct face *face, struct content_entry *content)
 {
     size_t size;
-    
+
     if ((face->flags & CCN_FACE_NOSEND) != 0) {
         // XXX - should count this.
         return;
     }
+
+    /*<!-- add by xu */
+    /* Insert a Control Packet ID into Content Object
+     * if the content has already a Control Packet ID,
+     * the content remained no change.
+     */
+    content = insert_controlpacketid_contentobject(h, content, NOTICE);
+    /* add by xu end -->*/
     size = content->size;
     if (h->debug & 4)
         ccnd_debug_content(h, __LINE__, "content_to", face, content);
     stuff_and_send(h, face, content->ccnb, size, NULL, 0, 0, 0);
+
     ccnd_meter_bump(h, face->meter[FM_DATO], 1);
     h->content_items_sent += 1;
 }
@@ -1779,8 +1996,13 @@ static enum cq_delay_class
 choose_content_delay_class(struct ccnd_handle *h, unsigned faceid, int content_flags)
 {
     struct face *face = face_from_faceid(h, faceid);
+    
     if (face == NULL)
         return(CCN_CQ_ASAP); /* Going nowhere, get it over with */
+    /* <!--kuwayama */
+    if (content_flags == CCN_CQ_GUARANTEE)
+      return(CCN_CQ_GUARANTEE);
+    /*  kuwayama--> */
     if ((face->flags & (CCN_FACE_LINK | CCN_FACE_MCAST)) != 0) /* udplink or such, delay more */
         return((content_flags & CCN_CONTENT_ENTRY_SLOWSEND) ? CCN_CQ_SLOW : CCN_CQ_NORMAL);
     if ((face->flags & CCN_FACE_DGRAM) != 0)
@@ -1850,13 +2072,14 @@ content_sender(struct ccn_schedule *sched,
         q->ready = q->send_queue->n;
     nsec = 0;
     burst_nsec = q->burst_nsec;
-    burst_max = 2;
+    //burst_max = 2;
+    burst_max = 4;//modified by xu
     if (q->ready < burst_max)
         burst_max = q->ready;
     if (burst_max == 0)
         q->nrun = 0;
     for (i = 0; i < burst_max && nsec < 1000000; i++) {
-        content = content_from_accession(h, q->send_queue->buf[i]);
+        content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
         if (content == NULL)
             q->nrun = 0;
         else {
@@ -1872,9 +2095,12 @@ content_sender(struct ccn_schedule *sched,
     if (q->ready < i) abort();
     q->ready -= i;
     /* Update queue */
-    for (j = 0; i < q->send_queue->n; i++, j++)
+    for (j = 0; i < q->send_queue->n; i++, j++) {
         q->send_queue->buf[j] = q->send_queue->buf[i];
+        q->control_queue->buf[j] = q->control_queue->buf[i];
+    }
     q->send_queue->n = j;
+    q->control_queue->n = j;
     /* Do a poll before going on to allow others to preempt send. */
     delay = (nsec + 499) / 1000 + 1;
     if (q->ready > 0) {
@@ -1895,7 +2121,7 @@ content_sender(struct ccn_schedule *sched,
     }
     /* Determine when to run again */
     for (i = 0; i < q->send_queue->n; i++) {
-        content = content_from_accession(h, q->send_queue->buf[i]);
+        content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
         if (content != NULL) {
             q->nrun = 0;
             delay = randomize_content_delay(h, q);
@@ -1906,10 +2132,245 @@ content_sender(struct ccn_schedule *sched,
         }
     }
     q->send_queue->n = q->ready = 0;
+    q->control_queue->n = q->ready = 0;
 Bail:
     q->sender = NULL;
     return(0);
 }
+
+/**
+ * Scheduled event for sending from a queue.
+ * content sender をDRR仕様に書き換える
+ * この中では送出するコンテンツ数に限りは設けないで以下の二点で送出を止める
+ * ・nsecが一定時間を迎える（一つのキューに時間を取られ過ぎるわけにはいかない）
+ * ・送出したコンテンツのサイズが帯域幅を使い尽くす(こうなったらbw_flagを1にする)
+ */
+static int
+content_sender_qos(struct ccn_schedule *sched,
+               void *clienth,
+               struct ccn_scheduled_event *ev,
+               int flags)
+{
+    int i, j;
+    int delay;
+    int nsec;
+    int burst_nsec;
+    int burst_max;
+    struct ccnd_handle *h = clienth;
+    struct content_entry *content = NULL;
+    unsigned faceid = ev->evint;
+    struct face *face = NULL;
+    struct content_queue *q = ev->evdata;
+    (void)sched;
+
+    if ((flags & CCN_SCHEDULE_CANCEL) != 0)
+        goto Bail;
+    face = face_from_faceid(h, faceid);
+    if (face == NULL)
+        goto Bail;
+    if (q->send_queue == NULL)
+        goto Bail;
+    if ((face->flags & CCN_FACE_NOSEND) != 0)
+        goto Bail;
+    /* Send the content at the head of the queue */
+    if (q->ready > q->send_queue->n ||
+        (q->ready == 0 && q->nrun >= 12 && q->nrun < 120))
+        q->ready = q->send_queue->n;
+    nsec = 0;
+    burst_nsec = q->burst_nsec;
+    burst_max = q->ready;
+    if (burst_max == 0)
+        q->nrun = 0;
+    for (i = 0; i < burst_max && nsec < 1000000; i++) {
+        content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
+        if (content == NULL)
+            q->nrun = 0;
+        else {
+            //g,dの送信したコンテンツのサイズが帯域幅を超えていたら更新されるまで転送できない
+            if (face->send_g_amount + face->send_d_amount + content->size * 8 >= face->bandwidth_f){
+                break;
+            }
+            //全体の帯域幅の限界は迎えていない&&gの帯域幅が設定されていないときはgがないということなので通常モード
+            if (face->bandwidth_g == 0) {
+                face->sending_status = 1;
+            }else{
+                if (face->g_queue->ready == 0){
+                    face->sending_status = 1;
+                }
+            }
+            //上の条件はクリアしたけどgが最大まで来ている→通常モード
+            if (content->control == GUARANTEE && face->send_g_amount + content->size * 8 >= face->bandwidth_g && face->sending_status == 0) {
+                face->sending_status = 1;
+            }
+
+            if (face->sending_status == 0) {
+                if (content->control == GUARANTEE) {
+                    send_content(h, face, content);
+                    face->send_g_amount += content->size * 8;
+                    content->refs--;
+                    /* face may have vanished, bail out if it did */
+                    if (face_from_faceid(h, faceid) == NULL)
+                        goto Bail;
+                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                    q->nrun++;
+                }else{
+                    break;
+                }
+            }else{
+                if(content->control == GUARANTEE){
+                    send_content(h, face, content);
+                    face->send_g_amount += content->size * 8;
+                    content->refs--;
+                    /* face may have vanished, bail out if it did */
+                    if (face_from_faceid(h, faceid) == NULL)
+                        goto Bail;
+                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                    q->nrun++;
+                }else{
+                    send_content(h, face, content);
+                    face->send_d_amount += content->size * 8;
+                    content->refs--;
+                    /* face may have vanished, bail out if it did */
+                    if (face_from_faceid(h, faceid) == NULL)
+                        goto Bail;
+                    nsec += burst_nsec * (unsigned)((content->size + 1023) / 1024);
+                    q->nrun++;
+                }
+            }
+        }
+    }
+    if (q->ready < i) abort();
+    q->ready -= i;
+    /* Update queue */
+    for (j = 0; i < q->send_queue->n; i++, j++) {
+        q->send_queue->buf[j] = q->send_queue->buf[i];
+        q->control_queue->buf[j] = q->control_queue->buf[i];
+    }
+    q->send_queue->n = j;
+    q->control_queue->n = j;
+    /* Do a poll before going on to allow others to preempt send. */
+    delay = (nsec + 499) / 1000 + 1;
+    if (q->ready > 0) {
+        if (h->debug & 8)
+            ccnd_msg(h, "face %u ready %u delay %i nrun %u",
+                     faceid, q->ready, delay, q->nrun, face->surplus);
+        return(delay);
+    }
+    q->ready = j;
+    if (q->nrun >= 12 && q->nrun < 120) {
+        /* We seem to be a preferred provider, forgo the randomized delay */
+        if (j == 0)
+            delay += burst_nsec / 50;
+        if (h->debug & 8)
+            ccnd_msg(h, "face %u ready %u delay %i nrun %u surplus %u",
+                     (unsigned)ev->evint, q->ready, delay, q->nrun, face->surplus);
+        return(delay);
+    }
+    /* Determine when to run again */
+    for (i = 0; i < q->send_queue->n; i++) {
+        content = content_from_accession_qos(h, q->send_queue->buf[i], q->control_queue->buf[i]);
+        if (content != NULL) {
+            q->nrun = 0;
+            delay = randomize_content_delay(h, q);
+            if (h->debug & 8)
+                ccnd_msg(h, "face %u queued %u delay %i",
+                         (unsigned)ev->evint, q->ready, delay);
+            return(delay);
+        }
+    }
+    //以下は全てのコンテンツを送信し終えた時の場合, 今回の場合, その状況は稀であると考えられるのでこうするわけにはいかない.
+    q->send_queue->n = q->ready = 0;
+    q->control_queue->n = q->ready = 0;
+    Bail:
+    q->sender = NULL;
+    return(0);
+}
+
+//add by Fumiya
+static int
+face_send_queue_insert_qos(struct ccnd_handle *h,struct face *face, struct content_entry *content)
+{
+    if (face == NULL || content == NULL || (face->flags & CCN_FACE_NOSEND) != 0)
+        return(-1);
+
+    struct ccn_charbuf *flatname = NULL;
+    flatname = ccn_charbuf_create();
+    ccn_flatname_append_from_ccnb(flatname,content->ccnb,content->size,0,2);
+
+    int i;
+    int system_flag = 0;
+    struct content_queue *q;
+    struct g_content_name *name;
+    enum cq_delay_class c;
+
+    //queueがまだなかった場合の処理
+    if (face->g_queue == NULL){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->g_queue = content_queue_create(h, face, c);
+    }
+    if (face->d_queue == NULL){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->d_queue = content_queue_create(h, face, c);
+    }
+    if (face->system_queue == NULL){
+        c = choose_content_delay_class(h, face->faceid, content->flags);
+        face->system_queue = content_queue_create(h, face, c);
+    }
+    //queueがあって, contentsの種類により入れるキューを変えなきゃいけない
+    //guaranteeの場合は特に名前リストを確認してguaranteeコンテンツが今何種類要求されているかを調べないといけない
+    if (content->control == GUARANTEE) {
+        char s[50];
+        strcpy(s,flatname->buf);
+        for(i = 0;i<10;i++){
+            if(face->content_names[i][1] == NULL || face->content_names[i][1] == '\0'){
+                strcpy(face->content_names[i],s);
+                face->g_contents++;
+                break;
+            }
+            if(strcmp(face->content_names[i],s)==0){
+                break;
+            }
+        }
+        q = face->g_queue;
+    }else{
+        if(strstr(flatname->buf,"DEFAULT")!=NULL){
+            q = face->d_queue;
+        }else {
+            q = face->system_queue;
+            system_flag = 1;
+        }
+    }
+    if (q == NULL) {
+        return -1;
+    }
+    ccn_charbuf_destroy(&flatname);
+
+    int ans;
+    int n;
+    int delay;
+
+    n = q->send_queue->n;
+    if(content->control == GUARANTEE){
+        ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
+    }else {
+        ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
+    }
+    if(q->control_queue->n <= ans)
+        ccn_indexbuf_append_element(q->control_queue, content->control);
+    if (n != q->send_queue->n)
+        content->refs++;
+    if (q->sender == NULL) {
+        q->ready = q->send_queue->n;
+        delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
+        if (system_flag == 1){
+            q->sender = ccn_schedule_event(h->sched, delay, content_sender, q, face->faceid);
+        }else{
+            q->sender = ccn_schedule_event(h->sched, delay, content_sender_qos, q, face->faceid);
+        }
+    }
+    return (ans);
+}
+//add by Fumiya End
 
 /**
  * Queue a ContentObject to be sent on a face.
@@ -1936,7 +2397,10 @@ face_send_queue_insert(struct ccnd_handle *h,
     /* Check the other queues first, it might be in one of them */
     for (k = 0; k < CCN_CQ_N; k++) {
         if (k != c && face->q[k] != NULL) {
-            ans = ccn_indexbuf_member(face->q[k]->send_queue, content->accession);
+            if(content->control == GUARANTEE)
+              ans = ccn_indexbuf_member(face->q[k]->send_queue, content->accession_g);
+            else
+              ans = ccn_indexbuf_member(face->q[k]->send_queue, content->accession);
             if (ans >= 0) {
                 if (h->debug & 8)
                     ccnd_debug_content(h, __LINE__, "content_otherq", face,
@@ -1946,14 +2410,24 @@ face_send_queue_insert(struct ccnd_handle *h,
         }
     }
     n = q->send_queue->n;
-    ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
+    if(content->control == GUARANTEE){
+	/*add by Fumiya*/
+        face->amount_size_of_guarantee += content->size;
+	ans = ccn_indexbuf_set_insert(q->send_queue, content->accession_g);
+	/*add by Fumiya*/
+    }else
+        ans = ccn_indexbuf_set_insert(q->send_queue, content->accession);
+    if(q->control_queue->n <= ans) 
+        ccn_indexbuf_append_element(q->control_queue, content->control);
     if (n != q->send_queue->n)
         content->refs++;
     if (q->sender == NULL) {
-        delay = randomize_content_delay(h, q);
+        //delay = randomize_content_delay(h, q);
         q->ready = q->send_queue->n;
+        delay = 1; //add by xu. fix the delay to 1 that all contents are sent as ASAP
         q->sender = ccn_schedule_event(h->sched, delay,
-                                       content_sender, q, face->faceid);
+                                         content_sender, q, face->faceid);
+
         if (h->debug & 8)
             ccnd_msg(h, "face %u q %d delay %d usec", face->faceid, c, delay);
     }
@@ -1969,7 +2443,7 @@ is_pending_on(struct ccnd_handle *h, struct interest_entry *ie, unsigned faceid)
     struct pit_face_item *x;
     
     for (x = ie->strategy.pfl; x != NULL; x = x->next) {
-        if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
+       if (x->faceid == faceid && (x->pfi_flags & CCND_PFI_PENDING) != 0)
             return(1);
         // XXX - depending on how list is ordered, an early out might be possible
         // For now, we assume no particular ordering
@@ -2018,17 +2492,16 @@ consume_matching_interests(struct ccnd_handle *h,
             if (content_face != NULL)
                 strategy_callout(h, p, CCNST_SATISFIED, content_face->faceid);
             for (x = p->strategy.pfl; x != NULL; x = x->next) {
-                if ((x->pfi_flags & CCND_PFI_PENDING) != 0)
-                    face_send_queue_insert(h, face_from_faceid(h, x->faceid),
-                                           content);
+                if ((x->pfi_flags & CCND_PFI_PENDING) != 0) {
+		            face_send_queue_insert_qos(h, face_from_faceid(h, x->faceid),content);
+		        }
             }
-            matches += 1;
+	        matches += 1;
             consume_interest(h, p);
         }
     }
-    return(matches);
+return(matches);
 }
-
 /**
  * Find and consume interests that match given content.
  *
@@ -2054,7 +2527,14 @@ match_interests(struct ccnd_handle *h, struct content_entry *content,
     struct nameprefix_entry *npe = NULL;
     struct ccny *y = NULL;
     
-    y = ccny_from_cookie(h->content_tree, content->accession);
+    // modified by xu for g content store 
+    if(content->control == GUARANTEE){
+        y = ccny_from_cookie(h->content_tree_g, content->accession_g);
+    }
+    else{
+        y = ccny_from_cookie(h->content_tree, content->accession);
+    }
+
     if (y == NULL) abort();
     name = charbuf_obtain(h);
     ccn_name_init(name);
@@ -2071,6 +2551,7 @@ match_interests(struct ccnd_handle *h, struct content_entry *content,
     }
     charbuf_release(h, name);
     name = NULL;
+
     indexbuf_release(h, namecomps);
     namecomps = NULL;
     for (; npe != NULL; npe = npe->parent) {
@@ -2085,6 +2566,7 @@ match_interests(struct ccnd_handle *h, struct content_entry *content,
     }
     return(n_matched);
 }
+
 
 /**
  * Send a message in a PDU, possibly stuffing other interest messages into it.
@@ -2133,6 +2615,7 @@ stuff_and_send(struct ccnd_handle *h, struct face *face,
     charbuf_release(h, c);
     return;
 }
+
 
 /**
  * Append a link-check interest if appropriate.
@@ -2275,8 +2758,8 @@ process_incoming_link_message(struct ccnd_handle *h,
                 return(0);
             }
             if (s > face->rseq && s - face->rseq < 255) {
-                ccnd_msg(h, "seq_gap %u %ju to %ju",
-                         face->faceid, face->rseq, s);
+                //ccnd_msg(h, "seq_gap %u %ju to %ju",
+                //         face->faceid, face->rseq, s);
                 face->rseq = s;
                 face->rrun = 1;
                 return(0);
@@ -2288,7 +2771,7 @@ process_incoming_link_message(struct ccnd_handle *h,
                 }
                 if (face->rseq - s < 255) {
                     /* Received out of order */
-                    ccnd_msg(h, "seq_ooo %u %ju", face->faceid, s);
+                    //ccnd_msg(h, "seq_ooo %u %ju", face->faceid, s);
                     if (s == face->rseq - face->rrun) {
                         face->rrun++;
                         return(0);
@@ -2475,8 +2958,12 @@ reap(
 static void
 reap_needed(struct ccnd_handle *h, int init_delay_usec)
 {
-    if (h->reaper == NULL)
+    if (h->reaper == NULL) {
         h->reaper = ccn_schedule_event(h->sched, init_delay_usec, reap, NULL, 0);
+        /* <!--kuwayama */
+        //commented by xu//ccn_schedule_event(h->drr, init_delay_usec, reap, NULL, 0);
+        /*  kuwayama--> */
+    }
 }
 
 /**
@@ -2486,19 +2973,37 @@ static int
 remove_content(struct ccnd_handle *h, struct content_entry *content)
 {
     struct ccny *y = NULL;
-    
+    int flag = 0;
     if (content == NULL)
         return(-1);
-    y = ccny_from_cookie(h->content_tree, content->accession);
+
+    // modified by xu for g content store 
+    if(content->control == GUARANTEE){
+        flag = 0;
+        y = ccny_from_cookie(h->content_tree_g, content->accession_g);
+    }
+    else{
+        flag = 1;
+        y = ccny_from_cookie(h->content_tree, content->accession);
+    }
+
+
     if (y == NULL)
         return(-1);
     if (content->refs != 0)
         ccnd_debug_content(h, __LINE__, "remove_queued_content", NULL, content);
     else if (h->debug & 4)
         ccnd_debug_content(h, __LINE__, "remove", NULL, content);
-    ccny_remove(h->content_tree, y);
-    content = NULL;
-    ccny_destroy(h->content_tree, &y); /* releases content as well */
+    // modified by xu for g content store 
+    if(flag == 0){
+        ccny_remove(h->content_tree_g, y);
+        content = NULL;
+        ccny_destroy(h->content_tree_g, &y); /* releases content as well */
+    } else {
+        ccny_remove(h->content_tree, y);
+        content = NULL;
+        ccny_destroy(h->content_tree, &y); /* releases content as well */
+    }
     return(0);
 }
 
@@ -3633,6 +4138,14 @@ send_interest(struct ccnd_handle *h, struct interest_entry *ie,
     ccn_charbuf_reset(c);
     if (lifetime != default_life)
         ccnb_append_tagged_binary_number(c, CCN_DTAG_InterestLifetime, lifetime);
+    /* <!-- add by xu */
+    /* There may be a bug that if the orginal interest has a ControlPacketID field,
+     * more than one ControlPacketID may be appended.
+     * This situation may occur when a node is forwarding an Interest packet.
+     */
+    if (h->interest_control_flag != -1)
+        ccnb_tagged_putf(c, CCN_DTAG_ControlPacketID, "%d", h->interest_control_flag);//add by xu
+    /* add by xu end -->*/
     noncesize = p->pfi_flags & CCND_PFI_NONCESZ;
     if (noncesize != 0)
         ccnb_append_tagged_blob(c, CCN_DTAG_Nonce, p->nonce, noncesize);
@@ -4217,6 +4730,10 @@ propagate_interest(struct ccnd_handle *h,
         ((unsigned char *)(intptr_t)ie->interest_msg)[ie->size - 1] = 0;
         xres = ccn_parse_interest(ie->interest_msg, ie->size, &xpi, NULL);
         if (xres < 0) abort();
+    
+    /*<-- add by xu*/
+    /*nothing for current*/
+    /*add by xu -->*/
     }
     lifetime = ccn_interest_lifetime(msg, pi);
     outbound = get_outbound_faces(h, face, msg, pi, npe);
@@ -4403,7 +4920,13 @@ next_child_at_level(struct ccnd_handle *h,
         return(NULL);
     name = charbuf_obtain(h);
     ccn_name_init(name);
-    y = ccny_from_cookie(h->content_tree, content->accession);
+
+    // modified by xu for g content store 
+    if(content->control == GUARANTEE)
+        y = ccny_from_cookie(h->content_tree_g, content->accession_g);
+    else
+        y = ccny_from_cookie(h->content_tree, content->accession);
+
     res = ccn_name_append_flatname(name, ccny_key(y), ccny_keylen(y), 0, level + 1);
     if (res < level)
         goto Bail;
@@ -4420,8 +4943,14 @@ next_child_at_level(struct ccnd_handle *h,
                         name->buf, name->length);
     flatname = ccn_charbuf_create();
     ccn_flatname_from_ccnb(flatname, name->buf, name->length);
-    y = ccn_nametree_look_ge(h->content_tree,
-                             flatname->buf, flatname->length);
+
+    // modified by xu for g content store 
+    if(content->control == GUARANTEE)
+        y = ccn_nametree_look_ge(h->content_tree_g, flatname->buf, flatname->length);
+    else
+        y = ccn_nametree_look_ge(h->content_tree, flatname->buf, flatname->length);
+
+
     if (y != NULL)
         next = ccny_payload(y);
 Bail:
@@ -4463,12 +4992,22 @@ drop_nonlocal_interest(struct ccnd_handle *h, struct nameprefix_entry *npe,
  *  on that face that also match this object.
  * Otherwise, initiate propagation of the interest.
  */
+ /*
+  *
+  *
+  struct ccn_indexbuf {
+    size_t n;
+    size_t limit;
+    size_t *buf;
+  };
+  * */
 static void
 process_incoming_interest(struct ccnd_handle *h, struct face *face,
                           unsigned char *msg, size_t size)
 {
     struct hashtb_enumerator ee;
     struct hashtb_enumerator *e = &ee;
+    //解析済みinterest情報を入れる構造体
     struct ccn_parsed_interest parsed_interest = {0};
     struct ccn_parsed_interest *pi = &parsed_interest;
     int k;
@@ -4483,15 +5022,24 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
     struct content_entry *next = NULL;
     struct ccn_charbuf *flatname = NULL;
     struct ccn_indexbuf *comps = indexbuf_obtain(h);
-    if (size > 65535)
+
+    if (size > 65535) {
         res = -__LINE__;
-    else
+    } else { 
         res = ccn_parse_interest(msg, size, pi, comps);
+    }
     if (res < 0) {
         ccnd_msg(h, "error parsing Interest - code %d", res);
         ccn_indexbuf_destroy(&comps);
         return;
     }
+    flatname = ccn_charbuf_create();
+    ccn_flatname_append_from_ccnb(flatname, msg, size, 0, -1);
+    if (strstr(flatname->buf, "GUARANTEE") != NULL) {
+        pi->control = GUARANTEE;
+    }
+    ccn_charbuf_destroy(&flatname);
+
     ccnd_meter_bump(h, face->meter[FM_INTI], 1);
     if (pi->scope >= 0 && pi->scope < 2 &&
              (face->flags & CCN_FACE_GG) == 0) {
@@ -4528,6 +5076,8 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
             if (drop_nonlocal_interest(h, npe, face, msg, size))
                 return;
             propagate_interest(h, face, msg, pi, npe);
+            //Noted by xu: This means that the content name is in PIT. 
+            //            Thus propagate the interest
             return;
         }
         if (h->debug & 16) {
@@ -4563,8 +5113,10 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
             for (try = 0; content != NULL; try++) {
                 if (!s_ok && is_stale(h, content)) {
                     next = content_next(h, content);
-                    if (content->refs == 0)
+                    if (content->refs == 0) {
+                        ccnd_msg(h,"5105 remove");
                         remove_content(h, content);
+                    }
                     else
                         try--;
                     content = next;
@@ -4598,12 +5150,31 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
                 content = last_match;
             if (content != NULL) {
                 /* Check to see if we are planning to send already */
+                /*Noted by xu:
+                     Here means this node found the content in its cs */
                 enum cq_delay_class c;
                 for (c = 0, k = -1; c < CCN_CQ_N && k == -1; c++)
-                    if (face->q[c] != NULL)
-                        k = ccn_indexbuf_member(face->q[c]->send_queue, content->accession);
+                    if (face->q[c] != NULL){
+                        if(content->control == GUARANTEE)
+                            k = ccn_indexbuf_member(face->q[c]->send_queue, content->accession_g);
+                        else
+                            k = ccn_indexbuf_member(face->q[c]->send_queue, content->accession);
+
+                    }
                 if (k == -1) {
-                    k = face_send_queue_insert(h, face, content);
+                    /* <!--kuwayama */
+                    //if (pi->control == GUARANTEE || strstr(flatname->buf, "GUARANTEE") != NULL) {
+                    if (strstr(flatname->buf, "GUARANTEE") != NULL) {
+                      content->flags = CCN_CQ_GUARANTEE;
+                      content->control = GUARANTEE;//add by xu
+                    }
+                    else {
+                      content->control = DEFAULT;//add by xu
+                    }
+
+                    /*  add by xu end -->*/
+                    /*  kuwayama--> */
+                    k = face_send_queue_insert_qos(h, face, content);
                     if (k >= 0) {
                         if (h->debug & (32 | 8))
                             ccnd_debug_ccnb(h, __LINE__, "consume", face, msg, size);
@@ -4616,8 +5187,9 @@ process_incoming_interest(struct ccnd_handle *h, struct face *face,
                 matched = 1;
             }
         }
-        if (!matched && npe != NULL && (pi->answerfrom & CCN_AOK_EXPIRE) == 0)
+        if (!matched && npe != NULL && (pi->answerfrom & CCN_AOK_EXPIRE) == 0){
             propagate_interest(h, face, msg, pi, npe);
+        }
     Bail:
         hashtb_end(e);
     }
@@ -4779,34 +5351,119 @@ content_tree_trim(struct ccnd_handle *h) {
     int tries;
     struct content_entry *c;
     struct content_entry *nextx;
-    
+
     if (h->content_tree->n <= h->capacity)
         return;
-    tries = 30;
+    tries = 3000;
     for (c = h->headx->nextx; c != h->headx; c = nextx) {
         nextx = c->nextx;
-        if (c->refs == 0) {
+        //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
+        if(c->refs == 0 && c->control != GUARANTEE){
+            content_dequeuex(h, c);
+            ccnd_msg(h,"5351 remove");
+            remove_content(h, c);
+            if (h->content_tree->n <= h->capacity)
+                return;
+        }
+    }
+
+
+    /*
+
+    for (c = h->headx->nextx; c != h->headx; c = nextx) {
+        nextx = c->nextx;
+        if(c->control == GUARANTEE){
+          // continue;
+        }        
+
+        if (c->refs == 0 && c->control != GUARANTEE ) {
+            content_dequeuex(h, c);
             remove_content(h, c);
             if (h->content_tree->n <= h->capacity)
                 return;
         }
         else if (!is_stale(h, c)) {
+     */
             /* add to no new queues so it will drain eventually */
-            mark_stale(h, c);
+      /*      mark_stale(h, c);
             if (h->debug & 4)
                 ccnd_debug_content(h, __LINE__, "force_stale", NULL, c);
             break;
         }
         else if (--tries <= 0)
             break;
-    }
+    }*/
     if (h->content_tree->n > h->content_tree->limit) {
         /* we've tried and failed to preserve queued content */
         c = h->headx->nextx;
-        if (c != h->headx)
+        if (c != h->headx && c->control != GUARANTEE)
+            ccnd_msg(h,"5388 remove");
             remove_content(h, c); /* logs remove_queued_content */
     }
 }
+/**
+ * Discard content as needed to enforce capacity limit
+ */
+void
+content_tree_g_trim(struct ccnd_handle *h) {
+    int tries;
+    struct content_entry *c;
+    struct content_entry *nextx;
+
+    if (h->content_tree_g->n <= h->capacity_g)
+        return;
+    tries = 3000;
+    for (c = h->headx->nextx; c != h->headx; c = nextx) {
+        nextx = c->nextx;
+        //ccnd_msg(h, "TRIM_G: ##########content type: %d", c->control);
+        if(c->refs == 0 && c->control == GUARANTEE){
+            content_dequeuex(h, c);
+            remove_content(h, c);
+            if (h->content_tree_g->n <= h->capacity_g)
+                return;
+
+        }
+    }
+    /*
+    for (c = h->headx->nextx; c != h->headx; c = nextx) {
+        nextx = c->nextx;
+        ccnd_msg(h, "TRIM_G: content type: %d", c->control);
+        if(c->control == GUARANTEE){
+          // continue;
+        }        
+
+        ccnd_msg(h, "TRIM_G:c->refs: %d", c->refs);
+
+        if (c->refs == 0 && c->control == GUARANTEE) {
+        
+            ccnd_msg(h, "TRIM_G:@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ GUARANTEE");
+            content_dequeuex(h, c);
+            remove_content(h, c);
+            if (h->content_tree_g->n <= h->capacity_g)
+                return;
+        }
+        else if (!is_stale(h, c)) {*/
+            /* add to no new queues so it will drain eventually */
+   /*
+            ccnd_msg(h, "TRIM_G: mark stale");
+            mark_stale(h, c);
+            if (h->debug & 4)
+                ccnd_debug_content(h, __LINE__, "force_stale", NULL, c);
+            break;
+        }
+        else if (--tries <= 0){
+            ccnd_msg(h, "TRIM_G: break");
+            break;}
+    }*/
+    if (h->content_tree_g->n > h->content_tree_g->limit) {
+        ccnd_msg(h, "TRIM_G: n is still greater than limit content type: %d", c->control);
+        /* we've tried and failed to preserve queued content */
+        c = h->headx->nextx;
+        if (c != h->headx && c->control == GUARANTEE)
+            remove_content(h, c); /* logs remove_queued_content */
+    }
+}
+
 
 /**
  * Process an arriving ContentObject.
@@ -4840,10 +5497,8 @@ process_incoming_content(struct ccnd_handle *h, struct face *face,
     struct ccn_charbuf *f = charbuf_obtain(h);
     struct ccny *y = NULL;
     ccn_cookie ocookie;
-    
     msg = wire_msg;
-    size = wire_size;
-    
+    size = wire_size;    
     res = ccn_parse_ContentObject(msg, size, &obj, comps);
     if (res < 0) {
         ccnd_msg(h, "error parsing ContentObject - code %d", res);
@@ -4868,6 +5523,11 @@ process_incoming_content(struct ccnd_handle *h, struct face *face,
         if (h->content_tree->limit < h->capacity + CCND_CACHE_MARGIN)
             ccn_nametree_grow(h->content_tree);
     }
+    // modified by xu for g content store 
+    if (h->content_tree_g->n >= h->content_tree_g->limit) {
+        if (h->content_tree_g->limit < h->capacity_g + CCND_CACHE_MARGIN)
+            ccn_nametree_grow(h->content_tree_g);
+    }
     ccn_flatname_append_from_ccnb(f, msg, size, 0, -1);
     ccn_flatname_append_component(f, obj.digest, obj.digest_bytes);
     y = ccny_create(nrand48(h->seed), sizeof(*content));
@@ -4877,11 +5537,36 @@ process_incoming_content(struct ccnd_handle *h, struct face *face,
         goto Bail;
     }
     content = ccny_payload(y); /* Allocated by ccny_create */
-    ocookie = ccny_enroll(h->content_tree, y);
+    content->control = obj.control;//add by xu
+    int c;
+    if (strstr(f->buf, "GUARANTEE") != NULL) {
+        content->control = GUARANTEE;//add by xu
+        obj.control = GUARANTEE;
+        ocookie = ccny_enroll(h->content_tree_g, y);  
+        c = ccny_cookie(y);
+    }else{
+        content->control = DEFAULT;//add by xu
+        obj.control = DEFAULT;
+        ocookie = ccny_enroll(h->content_tree, y); 
+        c = ccny_cookie(y);
+    }
+
+    //ccnd_msg(h, "content tree: %d, %d", h->content_tree->n, h->content_tree_g->n);
+    //ccnd_msg(h, "ccny enroll OCOOKIE:if not 0, has aready present %d", ocookie); 
+    //ccnd_msg(h, "ccny cookie OCOOKIE:if 0, drop  %d", c); 
     if (ocookie != 0) {
         /* An entry was already present */
-        ccny_destroy(h->content_tree, &y);
-        content = ccny_payload(ccny_from_cookie(h->content_tree, ocookie));
+        // modified by xu for g content store 
+        //if (content->control == GUARANTEE || obj.control == GUARANTEE || strstr(f->buf, "GUARANTEE") != NULL) {
+        if (strstr(f->buf, "GUARANTEE") != NULL) {
+            ccny_destroy(h->content_tree_g, &y);
+        // modified by xu for g content store 
+        // todo: handle multiple content trees
+            content = ccny_payload(ccny_from_cookie(h->content_tree_g, ocookie));
+        }else{
+            ccny_destroy(h->content_tree, &y);
+            content = ccny_payload(ccny_from_cookie(h->content_tree, ocookie));
+        }
         if (is_stale(h, content)) {
             /* When old content arrives after it has gone stale, freshen it */
             // XXX - ought to do mischief checks before this
@@ -4906,12 +5591,18 @@ process_incoming_content(struct ccnd_handle *h, struct face *face,
     }
     else {
         res = -__LINE__;
-        content->accession = ccny_cookie(y);
+        //if (obj.control == GUARANTEE || strstr(f->buf, "GUARANTEE") != NULL) {
+        if (strstr(f->buf, "GUARANTEE") != NULL) {
+            content->accession_g = ccny_cookie(y);
+        }else{
+            content->accession = ccny_cookie(y);
+        }
         content->arrival_faceid = face->faceid;
         content->ncomps = comps->n + 1;
         content->ccnb = malloc(size);
-        if (content->ccnb == NULL)
+        if (content->ccnb == NULL){
             goto Bail;
+        }
         content->size = size;
         memcpy(content->ccnb, msg, size);
         set_content_timer(h, content, &obj);
@@ -4921,20 +5612,42 @@ process_incoming_content(struct ccnd_handle *h, struct face *face,
         res = 1;
     }
 Bail:
-    indexbuf_release(h, comps);
-    charbuf_release(h, f);
-    f = NULL;
     if (res < 0) {
+        indexbuf_release(h, comps);
         ccnd_debug_ccnb(h, -res, "content_dropped", face, msg, size);
-        ccny_destroy(h->content_tree, &y);
+        // modified by xu for g content store 
+        // todo: handle multiple content trees
+        
+        if (strstr(f->buf, "GUARANTEE") != NULL) {
+            ccny_destroy(h->content_tree_g, &y);
+        }else{
+            ccny_destroy(h->content_tree, &y);
+        }
+        ccnd_msg(h, "obj %d", obj.control);
+        ccnd_msg(h, "f:%s", f->buf);
+        if(content != NULL)
+            ccnd_msg(h, "GUARANTEE: %d", -5409);
         if (content != NULL) abort();
     }
     else {
         int n_matches;
         enum cq_delay_class c;
         struct content_queue *q;
-        if (content == NULL) abort();
-        n_matches = match_interests(h, content, &obj, NULL, face);
+
+        if (content == NULL){
+	    ccnd_msg(h,"content null");
+	    abort();
+	}
+        if (strstr(f->buf, "GUARANTEE") != NULL) {
+          content->flags = CCN_CQ_GUARANTEE;  
+          content->control = GUARANTEE;//add by xu
+          n_matches = match_interests(h, content, &obj, NULL, face); //send out 
+        }
+        else {
+          content->control = DEFAULT;//add by xu
+	  n_matches = match_interests(h, content, &obj, NULL, face);
+        }
+        indexbuf_release(h, comps);
         if (res == 1) {
             if (n_matches < 0) {
                 remove_content(h, content);
@@ -4963,7 +5676,15 @@ Bail:
                 }
             }
         }
-        content_tree_trim(h);
+        // todo: handle multiple content tree
+        //       consider whether the handle should be inside or outside of content_tree_trim
+        if ( strstr(f->buf, "GUARANTEE") != NULL) {
+            content_tree_g_trim(h);
+        }else{
+            content_tree_trim(h);
+        }
+        charbuf_release(h, f);
+        f = NULL;
     }
 }
 
@@ -4989,6 +5710,7 @@ process_input_message(struct ccnd_handle *h, struct face *face,
         /* YYY This is the first place that we know that an inbound stream face is speaking CCNx protocol. */
         register_new_face(h, face);
     }
+    //CCN_DSTATE_PAUSEをセットして解析を行うとバイトストリームのタグを返してくれるようになる
     d->state |= CCN_DSTATE_PAUSE;
     dres = ccn_skeleton_decode(d, msg, size);
     if (d->state < 0)
@@ -4999,6 +5721,7 @@ process_input_message(struct ccnd_handle *h, struct face *face,
         return;
     }
     dtag = d->numval;
+    //解析結果のタグからそれがなんのメッセージか判断してそれぞれの処理に移動する
     switch (dtag) {
         case CCN_DTAG_CCNProtocolDataUnit:
             if (!pdu_ok)
@@ -5063,7 +5786,7 @@ ccnd_new_face_msg(struct ccnd_handle *h, struct face *face)
         peer = inet_ntop(addr->sa_family, rawaddr, printable, sizeof(printable));
     if (peer == NULL)
         peer = "(unknown)";
-    ccnd_msg(h,
+	ccnd_msg(h,
              "accepted datagram client id=%d (flags=0x%x) %s port %d",
              face->faceid, face->flags, peer, port);
 }
@@ -5162,10 +5885,17 @@ process_input_buffer(struct ccnd_handle *h, struct face *face)
     d = &face->decoder;
     msg = face->inbuf->buf;
     size = face->inbuf->length;
+    //@param d->index is number of bytes processed
+    //下のwhileが回るということはmsgの全てのバイトを処理しきっていないということ
     while (d->index < size) {
+        //@param msg+d->indexはmsgのポインタを未処理のところまで移動させている. つまり未処理のバイトのポインタを渡している
+        //@param size -d->indexはまだ処理していないバイトの数を表している
+        //ここで行われるskeleton decodeではバイトストリームを解析してデータが正しいかどうかを判断しているだけ
         dres = ccn_skeleton_decode(d, msg + d->index, size - d->index);
         if (d->state != 0)
             break;
+        //@param msg + d->index - dresは今回のデコードで解析した分を巻き戻してポインタを渡している = 解析したバイトの一番最初をさしている
+        //@param dres 解析したバイト数を表している
         process_input_message(h, face, msg + d->index - dres, dres, 0);
     }
     if (d->index != size) {
@@ -5307,11 +6037,15 @@ process_internal_client_buffer(struct ccnd_handle *h)
     struct face *face = h->face0;
     if (face == NULL)
         return;
+    //get the out buffer form internal client
     face->inbuf = ccn_grab_buffered_output(h->internal_client);
     if (face->inbuf == NULL)
         return;
+    //statistics information
     ccnd_meter_bump(h, face->meter[FM_BYTI], face->inbuf->length);
+    //in this function process input buffer
     process_input_buffer(h, face);
+    //proccess of in buffer is finished so init in buffer
     ccn_charbuf_destroy(&(face->inbuf));
 }
 
@@ -5587,8 +6321,11 @@ ccnd_run(struct ccnd_handle *h)
     int prev_timeout_ms = -1;
     int usec;
     for (h->running = 1; h->running;) {
-        process_internal_client_buffer(h);
-        usec = ccn_schedule_run(h->sched);
+	process_internal_client_buffer(h);
+        /* <!--kuwayama */
+        //commented by xu//usec = ccn_schedule_run_qos(h->sched, h->drr);
+        /*  kuwayama--> */
+        usec = ccn_schedule_run(h->sched);//add by xu
         timeout_ms = (usec < 0) ? -1 : ((usec + 960) / 1000);
         if (timeout_ms == 0 && prev_timeout_ms == 0)
             timeout_ms = 1;
@@ -5988,6 +6725,57 @@ ccnd_parse_uri_list(struct ccnd_handle *h, const char *what, const char *uris)
     return(ans);
 }
 
+
+/* <!--kuwayama */
+/* <!-- commented by xu
+struct reserve_list *rlist_create(void) {
+    struct reserve_list *p;
+    
+    p = (struct reserve_list *)malloc(sizeof(struct reserve_list));
+    p->flatname = ccn_charbuf_create();
+    p->faceid = 0;
+    p->next = NULL;
+    p->prev = NULL;
+    return p;
+}
+
+void rlist_destroy(struct ccnd_handle *h, struct reserve_list *p) {
+    struct reserve_list *next, *prev;
+
+    if (p == NULL || h->rlist_head == NULL)
+        return;
+    next = p->next;
+    prev = p->prev;
+    if (p == h->rlist_head)
+        h->rlist_head = next;
+    ccn_charbuf_destroy(p->flatname);
+    free(p);
+    if (next != NULL)
+        next->prev = prev;
+    if (prev != NULL)
+        prev->next = next;
+}
+
+void rlist_append(struct ccnd_handle *h, struct reserve_list *p) {
+    struct reserve_list *tail;
+
+    if (p == NULL || h->rlist_head == NULL)
+        return;
+    tail = h->rlist_head;
+    while (tail->next != NULL)
+        tail = tail->next;
+    tail->next = p;
+    p->prev = tail;
+}
+
+void rlist_clear(struct ccnd_handle *h) {
+    while (h->rlist_head != NULL)
+        rlist_destroy(h, h->rlist_head);
+}
+  commented by xu end -->*/
+/*  kuwayama--> */
+
+
 /**
  * Start a new ccnd instance
  * @param progname - name of program binary, used for locating helpers
@@ -6001,6 +6789,7 @@ ccnd_create(const char *progname, ccnd_logger logger, void *loggerdata)
     const char *portstr;
     const char *debugstr;
     const char *entrylimit;
+    const char *entrylimit_g;
     const char *mtu;
     const char *data_pause;
     const char *tts_default;
@@ -6012,6 +6801,7 @@ ccnd_create(const char *progname, ccnd_logger logger, void *loggerdata)
     struct ccnd_handle *h;
     struct hashtb_param param = {0};
     unsigned cap;
+    unsigned cap_g;
     
     sockname = ccnd_get_local_sockname();
     h = calloc(1, sizeof(*h));
@@ -6048,12 +6838,21 @@ ccnd_create(const char *progname, ccnd_logger logger, void *loggerdata)
     h->headx->nextx = h->headx->prevx = h->headx;
     h->ex_index = ccn_nametree_create(1);
     h->ex_index->compare = &ex_index_cmp;
+    ccnd_msg(h, "=======================ex index n: %d", h->ex_index->n);
+    ccnd_msg(h, "=======================ex index l: %d", h->ex_index->limit);
     h->send_interest_scratch = ccn_charbuf_create();
     h->ticktock.descr[0] = 'C';
     h->ticktock.micros_per_base = 1000000;
     h->ticktock.gettime = &ccnd_gettime;
     h->ticktock.data = h;
     h->sched = ccn_schedule_create(h, &h->ticktock);
+
+    //add by Fumiya
+    struct ccn_timeval start;
+    h->ticktock.gettime(&h->ticktock,&start);
+    h->last_update_qos = start;
+    //add by Fumiya End
+
     h->starttime = h->sec;
     h->starttime_usec = h->usec;
     h->wtnow = 0xFFFF0000; /* provoke a rollover early on */
@@ -6067,21 +6866,39 @@ ccnd_create(const char *progname, ccnd_logger logger, void *loggerdata)
     }
     else
         h->debug = 1;
-    portstr = getenv(CCN_LOCAL_PORT_ENVNAME);
+    portstr = getenv("CCN_LOCAL_PORT_ENVNAME");
     if (portstr == NULL || portstr[0] == 0 || strlen(portstr) > 10)
         portstr = CCN_DEFAULT_UNICAST_PORT;
     h->portstr = portstr;
     entrylimit = getenv("CCND_CAP");
-    h->capacity = (~0U)/2;
+    entrylimit_g = getenv("CCND_CAP_G");
+    h->capacity = (~0U)/2; 
+    h->capacity_g = (~0U)/2; 
     if (entrylimit != NULL && entrylimit[0] != 0)
         h->capacity = strtoul(entrylimit, NULL, 10);
+    if (entrylimit_g != NULL && entrylimit_g[0] != 0)
+        h->capacity_g = strtoul(entrylimit_g, NULL, 10);
+
     ccnd_msg(h, "CCND_DEBUG=%d CCND_CAP=%lu", h->debug, h->capacity);
-    cap = 100000; /* Don't try to allocate an insanely high number */
+    ccnd_msg(h, "CCND_DEBUG=%d CCND_CAP_G=%lu", h->debug, h->capacity_g);
+    //cap = 100000; /* Don't try to allocate an insanely high number */
+    cap = 1000000;//modified by xu /* Don't try to allocate an insanely high number */
+    cap_g = 1000000;//modified by xu /* Don't try to allocate an insanely high number */
     cap = h->capacity < cap ? h->capacity : cap;
+    cap_g = h->capacity_g < cap_g ? h->capacity_g : cap_g;
+
     h->content_tree = ccn_nametree_create(cap);
     h->content_tree->data = h;
     h->content_tree->pre_remove = &content_preremove;
     h->content_tree->finalize = &content_finalize;
+
+    // modified by xu for g content store 
+    h->content_tree_g = ccn_nametree_create(cap_g);
+    h->content_tree_g->data = h;
+    h->content_tree_g->pre_remove = &content_preremove;
+    h->content_tree_g->finalize = &content_finalize;
+
+    // todo: may need a contetn tree for DEFAULT contents
     h->mtu = 0;
     mtu = getenv("CCND_MTU");
     if (mtu != NULL && mtu[0] != 0) {
@@ -6221,6 +7038,9 @@ ccnd_destroy(struct ccnd_handle **pccnd)
         h->face_limit = h->face_gen = 0;
     }
     ccn_nametree_destroy(&h->content_tree);
+    // modified by xu for g content store 
+    ccn_nametree_destroy(&h->content_tree_g);
+
     ccn_nametree_destroy(&h->ex_index);
     ccn_charbuf_destroy(&h->send_interest_scratch);
     ccn_charbuf_destroy(&h->scratch_charbuf);
@@ -6234,6 +7054,10 @@ ccnd_destroy(struct ccnd_handle **pccnd)
             content_queue_destroy(h, &(h->face0->q[i]));
         for (i = 0; i < CCND_FACE_METER_N; i++)
             ccnd_meter_destroy(&h->face0->meter[i]);
+//        for (i = 0; i< 100 ;i++)
+//            ccn_charbuf_destroy(&h->face0->gList[i]->content_name);
+        content_queue_destroy(h,&(h->face0->g_queue));
+        content_queue_destroy(h,&(h->face0->d_queue));
         free(h->face0);
         h->face0 = NULL;
     }
@@ -6241,4 +7065,113 @@ ccnd_destroy(struct ccnd_handle **pccnd)
         free(h->headx);
     free(h);
     *pccnd = NULL;
+}
+
+// add by xu
+
+/**
+* @brief Init queue.
+* @param[out] q Queue structure
+* @param[in] capacity Initial queue capacity
+* @return None
+*/
+void queue_init(queue_t *q, const int capacity) {
+    q->front = 0;
+    q->rear = 0;
+    q->capacity = capacity;
+    q->elems = (queue_elem_t*)malloc(capacity * sizeof(queue_elem_t));
+}
+
+/**
+* @brief Release queue.
+* @param[inout] q Queue structure
+* @return None
+*/
+void queue_uninit(queue_t *q) {
+    q->front = 0;
+    q->rear = 0;
+    q->capacity = 0;
+    free(q->elems);
+    q->elems = NULL;
+}
+
+/**
+* @brief if the queue is empty.
+* @param[in] q Queue structure
+* @return Empty return TRUE,NOT empty return FALSE
+*/
+bool queue_empty(const queue_t *q) {
+    return q->front == q->rear;
+}
+
+/**
+* @brief Get the number of elements.
+* @param[in] q Queue structure
+* @return number of elements
+*/
+long int queue_size(const queue_t *q) {
+    return (q->rear - q->front + q->capacity) % q->capacity;
+}
+
+/**
+* @brief Append an element to the tail of the queue
+* @param[in] q Queue structure
+* @param[in] x the element to be appended
+* @return None
+*/
+void queue_push(queue_t *q, const queue_elem_t x) {
+    if ((q->rear + 1) % q->capacity == q->front)
+    {
+        // Queue is full, rellocate memory
+        queue_elem_t* tmp = (queue_elem_t*)malloc(q->capacity * 2 * sizeof(queue_elem_t));
+        if (q->front < q->rear)
+        {
+            memcpy(tmp, q->elems + q->front, (q->rear - q->front) * sizeof(queue_elem_t));
+            q->rear -= q->front;
+            q->front = 0;
+        }
+        else if (q->front > q->rear)
+        {
+            /* Copy data between q->front and q->capacity */
+            memcpy(tmp, q->elems + q->front, (q->capacity - q->front) * sizeof(queue_elem_t));
+            /* Copy data between q->data[0] and q->data[rear] */
+            memcpy(tmp + (q->capacity - q->front), q->elems, q->rear * sizeof(queue_elem_t));
+            q->rear += q->capacity - q->front;
+            q->front = 0;
+        }
+        free(q->elems);
+        q->elems = tmp;
+        q->capacity *= 2;
+    }
+    q->elems[q->rear] = x;
+    q->elems[q->rear] = x;
+    q->rear = (q->rear + 1) % q->capacity;
+}
+
+
+/**
+* @brief Delete an element from the head of the queue.
+* @param[in] q Queue structure
+* @return None
+*/
+void queue_pop(queue_t *q) {
+    q->front = (q->front + 1) % q->capacity;
+}
+
+/**
+* @brief Get first element of the queue, not pop.
+* @param[in] q Queue structure
+* @return Firest element of the queue
+*/
+queue_elem_t queue_front(const queue_t *q) {
+    return q->elems[q->front];
+}
+
+/**
+* @brief Get last element of the queue.
+* @param[in] q Queue structure
+* @return Last element of the queue
+*/
+queue_elem_t queue_back(const queue_t *q) {
+    return q->elems[q->rear - 1];
 }

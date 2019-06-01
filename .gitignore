@@ -14,6 +14,7 @@
 bin/
 include
 /lib
+reserch/
 log
 testdir
 testdir/

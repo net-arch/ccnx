@@ -279,6 +279,9 @@ ccn_schedule_cancel(struct ccn_schedule *sched, struct ccn_scheduled_event *ev)
     return(0);
 }
 
+/* <!--kuwayama 
+    いずれsys/socket::send()の返値を呼び出し元に返してsleepしないdrrにしたい
+/*  kuwayama--> */
 static void
 ccn_schedule_run_next(struct ccn_schedule *sched)
 {
@@ -329,6 +332,51 @@ ccn_schedule_run(struct ccn_schedule *sched)
         return(ans);
     return(INT_MAX);
 }
+
+/* <!--kuwayama */
+int
+ccn_schedule_run_qos(struct ccn_schedule *sched, struct ccn_schedule *drr)
+{
+    heapmicros ans;
+    int dtoken = 0;
+    int stoken = 0;
+
+    if (drr == NULL)
+      return ccn_schedule_run(sched);
+    do {
+      dtoken += 800;
+      stoken += 200;
+      dtoken = (dtoken > 8000 ? 8000 : dtoken); 
+      stoken = (stoken > 2000 ? 2000 : stoken);
+      /* 帯域保証で送信トークンを消費 */
+      while (drr->heap_n > 0 && drr->heap[0].event_time <= drr->now
+             && dtoken > 0) {
+        // perror("while(drr)...");
+        ccn_schedule_run_next(drr);
+        dtoken--;
+      }
+      update_time(drr);
+ 
+      while (sched->heap_n > 0 && sched->heap[0].event_time <= sched->now
+             && stoken > 0) {
+        // perror("while(sched)...");
+        ccn_schedule_run_next(sched);
+        stoken--;
+      }
+      update_time(sched);
+
+      usleep(100); // usleep = 1マイクロ秒寝る
+    } while((drr->heap_n > 0 && drr->heap[0].event_time <= drr->now) 
+            || (sched->heap_n > 0 && sched->heap[0].event_time <= sched->now));
+    if (drr->heap_n == 0 && sched->heap_n == 0)
+      return(-1);
+    
+    ans = sched->heap[0].event_time - sched->now;
+    if (ans < INT_MAX)
+      return(ans);
+    return(INT_MAX);
+}
+/*  kuwayama--> */
 
 #ifdef TESTSCHEDULE
 // cc -g -o testschedule -DTESTSCHEDULE=main -I../include ccn_schedule.c

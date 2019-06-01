@@ -25,8 +25,89 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
-
+#include <sys/time.h> // add by xu
+#include <string.h> //add by xu
 #include "ccnd_private.h"
+#include <ccn/charbuf.h> //add by xu
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#define UNIT_CONVERT 8
+
+/*add by Fumiya for adaptive bandwidth control*/
+
+static double time_diff(struct timeval s, struct timeval e){
+    double sec = (double)(e.tv_sec - s.tv_sec);
+    double micro = (double)(e.tv_usec - s.tv_usec);
+    double passed = sec + micro / 1000.0 / 1000.0;
+
+    return passed;
+}
+
+static void
+bandwidth_calculation(struct ccnd_handle *h){
+	struct timeval tv;
+	struct timeval time_last_1sec={0}; //一秒集計用のtimeval
+    struct timeval time_last_2sec={0};
+	int k = 0;
+
+    unsigned i;
+    int j;
+    int n;
+    struct face *f;
+    struct content_queue *q;
+    
+    double bw_of_g;
+    int bw_of_face;
+    int bw_amount;
+
+    while(k<100000000000000){
+	gettimeofday(&tv,NULL);
+	//最終更新時間から1秒が経過していた時
+	if((tv.tv_sec - time_last_1sec.tv_sec) >= 1){
+	    time_last_1sec = tv;
+
+	    for (i = 0; i < h->face_limit ; i++){
+	        if (h->faces_by_faceid[i] == NULL)
+	            continue;
+	        f = h->faces_by_faceid[i];
+//            if (f->send_d_amount > 0 || f->send_g_amount >0)
+                ccnd_msg(h,"#send_g#:%d #send_d#:%d #face#:%d #band#:%d #band_f#:%d",f->send_g_amount,f->send_d_amount,f->faceid,f->bandwidth_g,f->bandwidth_f);
+            //bandwidth_g : gListによって更新
+	        f->bandwidth_g = 3000000 * f->g_contents;
+	        if (f->bandwidth_g > 9000000)
+                f->bandwidth_g = 9000000;
+	        //bandwidth_f : 固定値
+	        f->bandwidth_f = 20000000;
+	        //send_g_amount : 0
+	        f->send_g_amount = 0;
+	        //send_d_amount : 0
+	        f->send_d_amount = 0;
+	        //sending_status : 0;
+	        f->sending_status = 0;
+	    }
+	}
+    if((tv.tv_sec - time_last_2sec.tv_sec) >= 2){
+        time_last_2sec = tv;
+
+        for (i = 0; i < h->face_limit ; i++){
+            if (h->faces_by_faceid[i] == NULL)
+                continue;
+            f = h->faces_by_faceid[i];
+            int c;
+            int d;
+            for(c = 0;c<10;c++){
+                for(d = 0; d<50;d++){
+                    f->content_names[c][d] = '\0';
+                }
+            }
+            f->g_contents = 0;
+        }
+    }
+}
+}
+/*add by Fumiya for adaptive bandwidth control*/
 
 static int
 stdiologger(void *loggerdata, const char *format, va_list ap)
@@ -40,12 +121,22 @@ main(int argc, char **argv)
 {
     struct ccnd_handle *h;
     
+    /*add by Fumiya for adaptive bandwidth control*/
+    int bw_thread;
+    pthread_t thread8;
+    /*add by Fumiya for adaptive bandwidth control*/
+
     if (argc > 1) {
         fprintf(stderr, "%s", ccnd_usage_message);
         exit(1);
     }
     signal(SIGPIPE, SIG_IGN);
     h = ccnd_create(argv[0], stdiologger, stderr);
+    
+    /*add by Fumiya for adaptive bandwidth control*/
+    bw_thread = pthread_create(&thread8, NULL, (void *)&bandwidth_calculation, h);
+    /*add by Fumiya for adaptive bandwidth control*/
+
     if (h == NULL)
         exit(1);
     ccnd_run(h);

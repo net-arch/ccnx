@@ -61,7 +61,7 @@ ccn_setup_sockaddr_un(const char *portstr, struct sockaddr_un *result)
     memset(sa, 0, sizeof(*sa));
     sa->sun_family = AF_UNIX;
     if (portstr == NULL || portstr[0] == 0)
-        portstr = getenv(CCN_LOCAL_PORT_ENVNAME);
+        portstr = getenv("CCN_LOCAL_PORT_ENVNAME");
     if (portstr != NULL && atoi(portstr) > 0 &&
           atoi(portstr) != atoi(CCN_DEFAULT_UNICAST_PORT))
         snprintf(sa->sun_path, sizeof(sa->sun_path), "%s.%s",
@@ -95,7 +95,7 @@ ccn_setup_sockaddr_in(const char *name, struct sockaddr *result, int length)
     if (port)
         *port++ = 0;
     if (port == NULL || port[0] == 0)
-        port = getenv(CCN_LOCAL_PORT_ENVNAME);
+        port = getenv("CCN_LOCAL_PORT_ENVNAME");
     if (port == NULL || port[0] == 0)
         port = CCN_DEFAULT_UNICAST_PORT;
     memset(result, 0, length);
